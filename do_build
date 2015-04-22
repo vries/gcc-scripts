@@ -1,0 +1,283 @@
+#!/bin/sh
+
+set -e
+
+usage()
+{
+  echo "do_build [check|dbg|lean|nobootstrap|pgo|avr|arm|mips|mips64]"
+  exit 1;
+}
+
+l=$(cd $(dirname $0); pwd)
+. ${l}/set_infra
+. ${l}/set_site
+makeflags=-j${parallel}
+
+target=
+fakebin=false
+
+if [ "$1" = "release" ]; then
+  prefix="release/"
+  configureflags="--enable-checking=release"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "dbg" ]; then
+  prefix="dbg/"
+  configureflags="--enable-checking=yes,rtl"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "darwin10-ada" ]; then
+  target="x86_64-apple-darwin10"
+  prefix="darwin10-ada/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=ada"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "hppa64" ]; then
+  target="hppa64-hp-hpux11.11"
+  prefix="hppa64/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "check" ]; then
+    prefix="check/"
+    configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,ada,java,objc,c++"
+elif [ "$1" = "nobootstrap" ]; then
+  prefix="nobootstrap/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,ada,java,objc,c++"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "lean" ]; then
+  prefix="lean/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,c++"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "lean-fortran" ]; then
+  prefix="lean-fortran/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=fortran"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "lean-c++" ]; then
+  prefix="lean-c++/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "lean-c" ]; then
+  prefix="lean-c/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "bootstrap-c" ]; then
+  prefix="bootstrap-c/"
+  configureflags="--enable-checking=yes,rtl --enable-languages=c"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "bootstrap-c++" ]; then
+  prefix="bootstrap-c++/"
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "ada" ]; then
+  prefix="ada/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++,ada"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "avr" ]; then
+  prefix="avr/"
+  target=avr-linux-gnu
+  #fakebin=true
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="--enable-checking=yes,rtl --enable-languages=c"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "bfin" ]; then
+  prefix="bfin/"
+  target=bfin-unknown-elf
+  fakebin=true
+  configureflags="--enable-checking=yes,rtl --enable-languages=c"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "arm" ]; then
+  prefix="arm/"
+  target="arm-linux-gnueabi"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "ia64" ]; then
+  prefix="ia64/"
+  target="ia64-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "mips" ]; then
+  prefix="mips/"
+  target="mips-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "hppa" ]; then
+  prefix="hppa/"
+  target="hppa2.0w-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "ppc" ]; then
+  prefix="ppc/"
+  target="ppc-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "s390" ]; then
+  prefix="s390/"
+  target="s390-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "sh" ]; then
+  prefix="sh/"
+  target="sh-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "sparc" ]; then
+  prefix="sparc/"
+  target="sparc-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "aarch64" ]; then
+  prefix="aarch64/"
+  target="aarch64-linux-gnu"
+  fakebin=false
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "mips64" ]; then
+  prefix="mips64/"
+  target="mips64-linux-gnu"
+  #fakebin=true
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "mips64el" ]; then
+  prefix="mips64el/"
+  target="mips64el-linux-gnu"
+  #fakebin=true
+  configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "hppa" ]; then
+  prefix="hppa/"
+  target="hppa-linux"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,java --disable-tls --disable-threads --disable-shared --disable-libquadmath --disable-libssp --without-libffi --disable-libgomp"
+  ALL_CFLAGS="-g3 -O0 -dH"
+  binutils=/home/vries/upstream/binutils/build/2.23.1/$target/install/bin
+  export PATH="$binutils:$PATH"
+  configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+elif [  "$1" = "pgo" ]; then
+  prefix="pgo/"
+  maketarget=profiledbootstrap
+elif [  "$1" = "i686-pgo" ]; then
+  # didn't get this to work
+  prefix="i686-pgo/"
+  maketarget=profiledbootstrap
+  BOOT_CFLAGS="-m32"
+  CFLAGS_FOR_TARGET="-m32"
+elif [ "$1" = "lean-c-old" ]; then
+  prefix="lean-c-old/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
+  ALL_CFLAGS="-g3 -O0 -dH"
+  # https://dev.openwrt.org/ticket/13039
+  makeflags="$makeflags MAKEINFO=missing"
+  makeflags="$makeflags POD2MAN=/bin/true"
+elif [ $# -ne 0 ]; then
+  usage
+fi
+
+p=$(pwd)
+
+build=${p}/${prefix}build
+install=${p}/${prefix}install
+src=${p}/src
+
+if [ ! -d ${src} ]; then
+  echo "sources not found: ${src}"
+  exit 1
+fi
+
+rm -Rf ${build} ${install}
+mkdir -p ${build} ${install}
+
+if [ "$target" != "" ]; then
+  configureflags="$configureflags --target=$target"
+fi
+
+if $fakebin; then
+  binutils=${p}/${prefix}binutils
+  if [ ! -d ${binutils} ]; then
+    mkdir -p ${binutils}
+    cp /bin/true ${binutils}/${target}-ar
+    cp /home/vries/gcc_versions/script/dummyas ${binutils}/${target}-as
+    cp /home/vries/gcc_versions/script/dummyld ${binutils}/${target}-ld
+    cp /home/vries/gcc_versions/script/dummynm ${binutils}/${target}-nm
+    #cp /bin/true ${binutils}/${target}-nm
+    cp /bin/touch ${binutils}/${target}-ranlib
+    cp /bin/true ${binutils}/${target}-strip
+  fi
+  export PATH="${binutils}:$PATH"
+  configureflags="$configureflags --with-gnu-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+fi
+
+cd ${build}
+
+# To get gnat support
+export CC=/usr/bin/gcc-4.6
+
+# outdated trick. now fixed by setting LIBRARY_PATH in set_infra
+# ensure linker can find crti
+true || (
+    cd /usr/lib
+    os=$(cd x86_64-linux-gnu ; echo crt*.o)
+    for o in $os; do
+	if [ ! -e $o ]; then
+	    echo missing /usr/lib/$o
+	    exit 1
+	fi
+    done
+)
+
+${p}/src/configure \
+  --prefix=${install} \
+  --with-cloog=${i} \
+  --with-ppl=${i} \
+  --with-gmp=${i} \
+  --with-mpfr=${i} \
+  --with-mpc=${i} \
+  --with-isl=${i} \
+  ${configureflags} \
+  > CONFIGURELOG 2>&1
+
+make \
+  ${ALL_CFLAGS:+BOOT_CFLAGS="${ALL_CFLAGS}" CFLAGS="${ALL_CFLAGS}" CXXFLAGS="${ALL_CFLAGS}" STAGE1_CFLAGS="${ALL_CFLAGS}"} \
+  ${CFLAGS_FOR_BUILD:+CFLAGS_FOR_BUILD="${CFLAGS_FOR_BUILD}"} \
+  ${CFLAGS:+CFLAGS="${CFLAGS}"} \
+  ${BOOT_CFLAGS:+BOOT_CFLAGS="${BOOT_CFLAGS}"} \
+  ${STAGE1_CFLAGS:+STAGE1_CFLAGS="${STAGE1_CFLAGS}"} \
+  ${CFLAGS_FOR_TARGET:+CFLAGS_FOR_TARGET="${CFLAGS_FOR_TARGET}"} \
+  ${makeflags} ${maketarget} \
+  > MAKELOG 2>&1
+
+make \
+  install \
+  > INSTALLLOG 2>&1
