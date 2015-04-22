@@ -5,33 +5,39 @@ set -e
 infra="$HOME/gcc_versions/infra/setup"
 url=ftp://gcc.gnu.org/pub/gcc/infrastructure
 
-min="
+minimal="
 gmp-4.3.2.tar.bz2
 ppl-0.11.tar.gz
-cloog-ppl-0.15.10.tar.gz
+cloog-ppl-0.15.11.tar.gz
 mpfr-2.4.2.tar.bz2
 mpc-0.8.1.tar.gz
 isl-0.14.tar.bz2
 "
 
-do_mimimal=false
-if [ "$1" = "-minimal" ]; then
+do_minimal=false
+if [ "$1" = "--minimal" ]; then
     do_minimal=true
+elif [ $# -ne 0 ]; then
+    echo "Unknown args: $*"
+    exit 1
 fi
 
 mkdir -p "$infra"
 cd "$infra"
 
 wget "${url}/"
-availabe=$(sed 's/<a href="//;s/".*//;s/%2B/\+/g' index.html \
+available=$(sed 's/<a href="//;s/".*//;s/%2B/\+/g' index.html \
     | grep "File" \
     | sed 's/.*\/infrastructure\///')
 rm -f index.html
-    
-if $do_minimal; do
+
+echo "available: $available"
+if $do_minimal; then
     required="$minimal"
+    echo "required: $required"
 else
-    required="$availble"
+    required="$available"
+    echo "required: all available"
 fi
 
 present=""
