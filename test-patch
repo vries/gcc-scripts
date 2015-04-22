@@ -1,0 +1,442 @@
+#!/bin/bash
+
+set -e
+
+g ()
+{
+    if ! ${git_initialized}; then
+	git_initialized="true"
+	g fetch --prune $remote
+    fi
+
+    [ -d "$git" ]
+    (
+	cd "$git"
+	git "$@"
+    )
+}
+
+setup_ref ()
+{
+    [ $# -eq 0 ]
+
+    date=$(date +%y-%m-%d)
+    tag="$refprefix$date"
+
+    rd="$buildbase/$tag"
+    mkdir -p "$rd"
+
+    g tag -d "$tag" || true
+    g tag "$tag" "$base"
+
+    local src="$rd/src"
+    mkdir -p "$src"
+
+    g archive "$tag" \
+	| tar -x -C "$src" 
+}
+
+get_days ()
+{
+    local year="$1"
+    local month="$2"
+    local day="$3"
+    shift 3
+
+    local days
+    days=$(echo "$year * 365 + $month * 31 + $day" \
+	| bc)
+
+    [ "$days" != "" ]
+    [ $days -ge 0 ]
+
+    echo $days
+}
+
+get_todays ()
+{
+    [ $# -eq 0 ]
+    get_days $(date +%y) $(date +%m) $(date +%d)
+}
+
+get_age ()
+{
+    local refdays
+    refdays=$(get_days "$@")
+
+    local todays
+    todays=$(get_todays)
+
+    local age
+    age=$(($todays - $refdays))
+
+    [ "$age" != "" ]
+    [ $age -ge 0 ]
+    echo $age
+}
+
+get_last_ref ()
+{
+    local old="$1"
+    shift
+
+    if [ "$(g tag -l $last)" = "" ]; then
+	return
+    fi
+
+    tag=$(g tag -l -n2 "$last" \
+	| tail -n 1 \
+	| awk '{print $1}')
+    local refdate
+    refdate=$(g tag -l -n1 "$last" \
+	| awk '{print $2}')
+
+    local age
+    age=$(get_age $(echo $refdate | sed 's/-/ /g'))
+
+    if [ $age -gt $old ]; then
+	oldtag="$tag"
+	tag=""
+    fi
+}
+
+filter_sum ()
+{
+    local dir="$1"
+    shift
+
+    local failpat='^(FAIL|PASS|ERROR|UNRESOLVED|UNSUPPORTED|UNTESTED|XFAIL|XPASS|KFAIL|KPASS)'
+    (
+	cd "$dir"
+
+	find -name '*.sum' \
+	    | xargs egrep "$failpat" \
+	    | sed 's/\/home\/[^ ]*\/src/SRC/g;s/\/home\/[^ ]*\/build/BUILD/g'
+    )
+}
+
+do_build ()
+{
+    local dir="$1"
+    local type="$2"
+    shift 2
+
+    (
+	cd "$dir"
+	if ! $scriptdir/do_build "$type"; then
+	    return 1
+	fi
+    )
+    return 0
+}
+
+build_ref ()
+{
+    [ $# -eq  0 ]
+    if ! do_build "$rd" nobootstrap; then
+	return 1
+    fi
+
+    if ! do_build "$rd" check; then
+	return 1
+    fi
+
+    return 0
+}
+
+do_test ()
+{
+    local dir="$1"
+    shift 1
+
+    (
+	cd "$dir"
+	$scriptdir/do_check_runtestflags \
+	    $runtestflags \
+	    "--target_board='$boards'" \
+	    || true
+    )
+}
+
+get_ref ()
+{
+    [ $# -eq  0 ]
+
+    if ! build_ref; then
+	echo ref build failed
+	return 1
+    fi
+
+    echo ref build succeeded, accepting new ref
+    g tag -d "$last" || true
+    g tag -F <(/bin/echo -e "$date\n$tag") "$last" "$tag"
+
+    # nobootstrap ref - test
+    do_test "$rd/nobootstrap"
+    filter_sum $rd/nobootstrap/build > $rd/FAIL.nobootstrap
+
+    # bootstrap ref - test
+    do_test "$rd"
+    filter_sum $rd/build > $rd/FAIL
+}
+
+build_test ()
+{
+    local id=$1
+    shift
+
+    local target
+    local dir
+    local suffix
+
+    case $id in
+	nobootstrap*)
+	    target=nobootstrap
+	    dir=nobootstrap
+	    suffix=.nobootstrap
+	    ;;
+	bootstrap*)
+	    target=check
+	    dir=.
+	    suffix=
+	    ;;
+	*)
+	    echo unsupported build
+	    exit 1
+	    ;;
+    esac
+
+    # do build
+    do_build $d/with $target
+
+    if echo $id | egrep -q '\-notest$'; then
+	return
+    fi
+
+    # do test
+    do_test "$with/$dir"
+
+    # extract test results
+    filter_sum "$with/$dir/build" > $with/FAIL$suffix
+
+    # compare test results
+    (
+	cd $d
+	diff -u \
+	    $without/FAIL$suffix \
+	    $with/FAIL$suffix \
+	    2>&1 | tee DIFF$suffix
+    )
+}
+
+parse_args ()
+{    
+    if [ $# -eq 0 ]; then
+	echo "Usage: $(basename $0) <branch>"
+	echo "<branch>:"
+	g branch -r \
+	    | grep -v 'HEAD'
+	exit 1
+    fi
+
+    runtestflags=""
+    boards=""
+    while [ $# -gt 0 ]; do
+	local arg="$1"
+	shift
+	case "$arg" in
+	    --build)
+		arg="$1"
+		shift
+		case "$arg" in
+		    nobootstrap|bootstrap)
+			builds="$builds $arg"
+			;;
+		    *)
+			echo "Unknown build"
+			exit 1
+		esac
+		;;
+	    --base)
+		arg="$1"
+		shift
+		case "$arg" in
+		    gcc-4_6-branch|gcc-4_7-branch|gcc-4_8-branch|gcc-4_9-branch)
+			;;
+		    gomp-4_0-branch|master)
+			;;
+		    *)
+			echo "Unknown base"
+			exit 1
+		esac
+		base="$arg"
+		;;
+	    --use-ref)
+		arg="$1"
+		shift
+		# todo: check if it is a tag indeed.
+		tag="$arg"
+		;;
+	    --runtestflags)
+		arg="$1"
+		shift
+		runtestflags="$runtestflags $arg"
+		;;
+	    --board)
+		arg="$1"
+		shift
+		boards="$boards $arg"
+		;;
+	    *)
+		if [ $# -eq 0 ]; then
+		    branch="$arg"
+		else
+		    echo "Too many arguments"
+		    exit 1
+		fi
+	esac
+    done
+
+    # set default build arguments
+    if [ -z "$builds" ]; then
+	builds="nobootstrap bootstrap"
+    fi
+
+    if [ -z "$boards" ]; then
+	boards="unix/ unix/-m32"	
+    fi
+
+
+    if [ -z "$base" ]; then
+	base="master"
+    fi
+}
+
+rebase ()
+{
+    local onto="$1"
+    local base="$2"
+    local branch="$3"
+
+    # Update $base before determining merge-base
+    g checkout "$base"
+    g pull
+
+    # get merge base
+    local base
+    base=$(g merge-base "$base" "$branch")
+
+    g rebase --onto "$onto" "$base" "$branch"
+}
+
+main ()
+{
+    scriptdir=$(cd $(dirname $0); pwd -P)
+
+    local root
+    root=$(cd $scriptdir/..; pwd -P)
+
+    git_initialized="false"
+    git="$root/gcc.git"
+
+    #remote="lenny-4.8"
+    remote="lenny"
+
+    # set base, builds, branch
+    parse_args "$@"
+
+    set -x 
+
+    buildbase="$root/data"
+    refprefix="ref-$base-"
+    branchprefix="test-"
+    last="${refprefix}last"
+
+    # create local branch
+    local localbranch="$branchprefix$branch"
+    
+    # cleanup git dir
+    g rebase --abort || true
+    g clean -f
+
+    # move branch away from $localbranch, to be able to delete it
+    g checkout $base
+    g pull
+
+    if [ "$branch" == "ref" ]; then
+	setup_ref
+	get_ref
+	return
+    fi
+
+    g branch -D "$localbranch" || true
+    g branch "$localbranch" "$remote/$branch"
+
+    # get reference build, or make one
+    local newref=false
+    if [ "$tag" = "new" ]; then
+	tag=""
+	setup_ref
+	newref=true	
+    elif [ "$tag" = "" ]; then
+	get_last_ref 14
+	local backuptag
+	if [ "$tag" = "" ]; then
+	    backuptag="$oldtag"
+	    setup_ref
+	    newref=true
+	else
+	    rd="$buildbase/$tag"
+	fi
+    else
+	rd="$buildbase/$tag"
+    fi
+
+    # hmm. instead of master we could also use $remote/master
+    if ! rebase "$tag" "$base" "$localbranch"; then
+	rebasefailed=true
+	if ! $newref; then
+	    # try new ref
+	    newref=true
+	    setup_ref
+	    rebase "$tag" "$base" "$localbranch"
+	    # todo: if also this rebase fails, find base of branch, and use that
+	else
+	    exit 1
+	fi
+    fi
+
+    if $newref; then
+	get_ref
+	# todo: try to use backuptag
+    fi    
+
+    # cleanup test dir
+    d="$buildbase/$localbranch"
+    if [ -d $d ]; then
+	mv $d to-be-removed
+	rm -Rf to-be-removed &
+    fi
+
+    # setup test dir
+    mkdir -p $d
+
+    without="$d/without"
+    ln -sfT $rd "$without"
+
+    with="$d/with"
+    mkdir -p "$with"
+
+    # setup sources
+    local src="$with/src"
+    mkdir -p "$src"
+    g archive "$localbranch" \
+	| tar -x -C "$src" 
+
+    # do builds
+    for build in $builds; do
+	build_test $build
+    done
+}
+
+main "$@" 2>&1 | tee TESTLOG
