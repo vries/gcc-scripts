@@ -1,0 +1,54 @@
+#!/bin/bash
+
+set -e
+
+infra="$HOME/gcc_versions/infra/setup"
+url=ftp://gcc.gnu.org/pub/gcc/infrastructure
+
+min="
+gmp-4.3.2.tar.bz2
+ppl-0.11.tar.gz
+cloog-ppl-0.15.10.tar.gz
+mpfr-2.4.2.tar.bz2
+mpc-0.8.1.tar.gz
+isl-0.14.tar.bz2
+"
+
+do_mimimal=false
+if [ "$1" = "-minimal" ]; then
+    do_minimal=true
+fi
+
+mkdir -p "$infra"
+cd "$infra"
+
+wget "${url}/"
+availabe=$(sed 's/<a href="//;s/".*//;s/%2B/\+/g' index.html \
+    | grep "File" \
+    | sed 's/.*\/infrastructure\///')
+rm -f index.html
+    
+if $do_minimal; do
+    required="$minimal"
+else
+    required="$availble"
+fi
+
+present=""
+download=""
+for f in $required; do
+    if [ -f "$infra/$f" ]; then
+	present="$present $f"
+    else
+	download="$download $f"
+    fi
+done
+
+echo present: $present
+echo download: $download
+echo "Press enter to continue"
+read dummy
+
+for f in $download; do
+    wget $url/$f
+done
