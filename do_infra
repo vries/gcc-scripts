@@ -1,0 +1,130 @@
+#!/bin/sh -x
+
+set -e
+
+l=$(cd $(dirname $0); pwd)
+. ${l}/set_site
+
+makeflags=-j${parallel}
+
+clean=false
+
+if $clean; then
+    rm -Rf \
+	lib share include \
+	src src.tgz \
+	build build.tgz \
+	log log.tgz \
+	*~
+fi
+
+mkdir -p src build log
+
+p=$(pwd)
+s=${p}/src
+d=${p}/setup
+b=${p}/build
+l=${p}/log
+
+if [ ! -f $p/lib/libgmp.a ]; then
+    cd ${s} \
+	&& tar xfj ${d}/gmp-4.3.2.tar.bz2 \
+	&& ln -s gmp* gmp
+    mkdir ${b}/gmp
+    {
+	# See https://lists.debian.org/debian-gcc/2009/11/msg00069.html for
+	# reason for CPPFLAGS=-fexceptions.
+	cd ${b}/gmp \
+	    && export CPPFLAGS=-fexceptions \
+	    && ${s}/gmp/configure --enable-cxx --prefix=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/gmp.log
+fi
+
+if [ ! -f $p/lib/libppl.a ]; then
+    cd ${s} \
+	&& tar xfz ${d}/ppl-0.11.tar.gz \
+	&& ln -s ppl* ppl
+    mkdir ${b}/ppl
+    {
+	cd ${b}/ppl \
+	    && ${s}/ppl/configure --prefix=${p} --with-libgmp-prefix=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/ppl.log
+fi
+
+if [ ! -f $p/lib/libppl_c.a ]; then
+    cd ${s} \
+	&& tar xfz ${d}/cloog-ppl-0.15.10.tar.gz \
+	&& ln -s cloog-ppl* cloog-ppl
+    cd ${s}/cloog-ppl \
+	&& patch -p0 < ${d}/all.diff
+    mkdir ${b}/cloog-ppl
+    { 
+	cd ${b}/cloog-ppl \
+	    && ${s}/cloog-ppl/configure --prefix=${p} --with-ppl=${p} --with-gmp=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/cloog.log
+fi
+
+if [ ! -f $p/lib/libmpfr.a ]; then
+    cd ${s} \
+	&& tar xfj ${d}/mpfr-2.4.2.tar.bz2 \
+	&& ln -s mpfr* mpfr
+    mkdir ${b}/mpfr
+    {
+	cd ${b}/mpfr \
+	    && ${s}/mpfr/configure --prefix=${p} --with-gmp=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/mpfr.log
+fi
+
+if [ ! -f $p/lib/libmpc.a ]; then
+    cd ${s} \
+	&& tar xfz ${d}/mpc-0.8.1.tar.gz \
+	&& ln -s mpc* mpc
+    mkdir ${b}/mpc
+    {
+	cd ${b}/mpc \
+	    && ${s}/mpc/configure --prefix=${p} --with-mpfr=${p} --with-gmp=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/mpc.log
+fi
+
+if [ ! -f $p/lib/libisl.a ]; then
+    cd ${s} \
+	&& tar xfj ${d}/isl-0.14.tar.bz2 \
+	&& ln -s isl* isl
+    mkdir ${b}/isl
+    {
+	cd ${b}/isl \
+	    && ${s}/isl/configure --prefix=${p} --with-gmp-prefix=${p} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/isl.log
+fi
+
+cd ${p}
+
+if $clean; then
+    for d in  log src build; do
+	tar cvfz ${d}.tgz ${d} && rm -Rf ${d}
+    done
+fi
