@@ -1,0 +1,3 @@
+parallel=$(($(egrep -c '^processor' /proc/cpuinfo) + 1))
+#parallel=2
+ulimit -c unlimited
