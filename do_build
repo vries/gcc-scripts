@@ -4,9 +4,17 @@ set -e
 
 usage()
 {
-  echo "do_build [check|dbg|lean|nobootstrap|pgo|avr|arm|mips|mips64]"
+  echo "do_build [ --no-prefix ] <build configuration>"
   exit 1;
 }
+
+noprefix=false
+if [ "$1" = "--no-prefix" ]; then    
+    noprefix=true
+    shift
+fi
+
+cfg="$1"
 
 l=$(cd $(dirname $0); pwd)
 . ${l}/set_infra
@@ -23,67 +31,67 @@ if gnat > /dev/null; then
     adalang=",ada"
 fi
 
-if [ "$1" = "release" ]; then
+if [ "$cfg" = "release" ]; then
   prefix="release/"
   configureflags="--enable-checking=release"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "dbg" ]; then
+elif [ "$cfg" = "dbg" ]; then
   prefix="dbg/"
   configureflags="--enable-checking=yes,rtl"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "darwin10-ada" ]; then
+elif [ "$cfg" = "darwin10-ada" ]; then
   target="x86_64-apple-darwin10"
   prefix="darwin10-ada/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=ada"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "hppa64" ]; then
+elif [ "$cfg" = "hppa64" ]; then
   target="hppa64-hp-hpux11.11"
   prefix="hppa64/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "check" ]; then
+elif [ "$cfg" = "check" ]; then
     prefix="check/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
-elif [ "$1" = "check-noada" ]; then
+elif [ "$cfg" = "check-noada" ]; then
     prefix="check/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
-elif [ "$1" = "nobootstrap" ]; then
+elif [ "$cfg" = "nobootstrap" ]; then
   prefix="nobootstrap/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "nobootstrap-noada" ]; then
+elif [ "$cfg" = "nobootstrap-noada" ]; then
   prefix="nobootstrap/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "lean" ]; then
+elif [ "$cfg" = "lean" ]; then
   prefix="lean/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,c++"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "lean-fortran" ]; then
+elif [ "$cfg" = "lean-fortran" ]; then
   prefix="lean-fortran/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=fortran"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "lean-c++" ]; then
+elif [ "$cfg" = "lean-c++" ]; then
   prefix="lean-c++/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "lean-c" ]; then
+elif [ "$cfg" = "lean-c" ]; then
   prefix="lean-c/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "bootstrap-c" ]; then
+elif [ "$cfg" = "bootstrap-c" ]; then
   prefix="bootstrap-c/"
   configureflags="--enable-checking=yes,rtl --enable-languages=c"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "bootstrap-c++" ]; then
+elif [ "$cfg" = "bootstrap-c++" ]; then
   prefix="bootstrap-c++/"
   configureflags="--enable-checking=yes,rtl --enable-languages=c,c++"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "ada" ]; then
+elif [ "$cfg" = "ada" ]; then
   prefix="ada/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++,ada"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "avr" ]; then
+elif [ "$cfg" = "avr" ]; then
   prefix="avr/"
   target=avr-linux-gnu
   #fakebin=true
@@ -92,13 +100,13 @@ elif [ "$1" = "avr" ]; then
   configureflags="--enable-checking=yes,rtl --enable-languages=c"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "bfin" ]; then
+elif [ "$cfg" = "bfin" ]; then
   prefix="bfin/"
   target=bfin-unknown-elf
   fakebin=true
   configureflags="--enable-checking=yes,rtl --enable-languages=c"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "arm" ]; then
+elif [ "$cfg" = "arm" ]; then
   prefix="arm/"
   target="arm-linux-gnueabi"
   fakebin=false
@@ -107,7 +115,7 @@ elif [ "$1" = "arm" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "ia64" ]; then
+elif [ "$cfg" = "ia64" ]; then
   prefix="ia64/"
   target="ia64-linux-gnu"
   fakebin=false
@@ -116,7 +124,7 @@ elif [ "$1" = "ia64" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "mips" ]; then
+elif [ "$cfg" = "mips" ]; then
   prefix="mips/"
   target="mips-linux-gnu"
   fakebin=false
@@ -125,7 +133,7 @@ elif [ "$1" = "mips" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "hppa" ]; then
+elif [ "$cfg" = "hppa" ]; then
   prefix="hppa/"
   target="hppa2.0w-linux-gnu"
   fakebin=false
@@ -134,7 +142,7 @@ elif [ "$1" = "hppa" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "ppc" ]; then
+elif [ "$cfg" = "ppc" ]; then
   prefix="ppc/"
   target="ppc-linux-gnu"
   fakebin=false
@@ -143,7 +151,7 @@ elif [ "$1" = "ppc" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "s390" ]; then
+elif [ "$cfg" = "s390" ]; then
   prefix="s390/"
   target="s390-linux-gnu"
   fakebin=false
@@ -152,7 +160,7 @@ elif [ "$1" = "s390" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "sh" ]; then
+elif [ "$cfg" = "sh" ]; then
   prefix="sh/"
   target="sh-linux-gnu"
   fakebin=false
@@ -161,7 +169,7 @@ elif [ "$1" = "sh" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "sparc" ]; then
+elif [ "$cfg" = "sparc" ]; then
   prefix="sparc/"
   target="sparc-linux-gnu"
   fakebin=false
@@ -170,7 +178,7 @@ elif [ "$1" = "sparc" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "aarch64" ]; then
+elif [ "$cfg" = "aarch64" ]; then
   prefix="aarch64/"
   target="aarch64-linux-gnu"
   fakebin=false
@@ -179,19 +187,19 @@ elif [ "$1" = "aarch64" ]; then
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "mips64" ]; then
+elif [ "$cfg" = "mips64" ]; then
   prefix="mips64/"
   target="mips64-linux-gnu"
   #fakebin=true
   configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "mips64el" ]; then
+elif [ "$cfg" = "mips64el" ]; then
   prefix="mips64el/"
   target="mips64el-linux-gnu"
   #fakebin=true
   configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
   ALL_CFLAGS="-g3 -O0 -dH"
-elif [ "$1" = "hppa" ]; then
+elif [ "$cfg" = "hppa" ]; then
   prefix="hppa/"
   target="hppa-linux"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,java --disable-tls --disable-threads --disable-shared --disable-libquadmath --disable-libssp --without-libffi --disable-libgomp"
@@ -199,16 +207,16 @@ elif [ "$1" = "hppa" ]; then
   binutils=/home/vries/upstream/binutils/build/2.23.1/$target/install/bin
   export PATH="$binutils:$PATH"
   configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
-elif [  "$1" = "pgo" ]; then
+elif [  "$cfg" = "pgo" ]; then
   prefix="pgo/"
   maketarget=profiledbootstrap
-elif [  "$1" = "i686-pgo" ]; then
+elif [  "$cfg" = "i686-pgo" ]; then
   # didn't get this to work
   prefix="i686-pgo/"
   maketarget=profiledbootstrap
   BOOT_CFLAGS="-m32"
   CFLAGS_FOR_TARGET="-m32"
-elif [ "$1" = "lean-c-old" ]; then
+elif [ "$cfg" = "lean-c-old" ]; then
   prefix="lean-c-old/"
   configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
   ALL_CFLAGS="-g3 -O0 -dH"
@@ -217,6 +225,10 @@ elif [ "$1" = "lean-c-old" ]; then
   makeflags="$makeflags POD2MAN=/bin/true"
 elif [ $# -ne 0 ]; then
   usage
+fi
+
+if $noprefix; then
+    prefix=""
 fi
 
 p=$(pwd)
