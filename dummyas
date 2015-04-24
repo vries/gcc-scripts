@@ -1,0 +1,19 @@
+#!/bin/sh
+
+out=""
+while true; do
+  if [ $# -eq 0 ]; then
+    break
+  fi
+  arg=$1
+  if [ "$arg" = "-o" ]; then
+    shift
+    out=$1
+  fi
+  shift
+done
+
+if [ "$out" != "" ]; then
+  echo dummy > $out
+fi
+

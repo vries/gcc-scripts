@@ -1,0 +1,8 @@
+#!/bin/sh
+
+#exec /usr/bin/nm "$@"
+
+# To fix error:
+#   No symbols seen -- broken or mis-installed nm?
+echo dummy.o:
+echo 0000000000000000 T dummy
