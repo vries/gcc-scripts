@@ -123,7 +123,7 @@ do_build ()
 
     (
 	cd "$dir"
-	if ! $scriptdir/do_build "$type"; then
+	if ! $scriptdir/do_build "$@" "$type"; then
 	    return 1
 	fi
     )
@@ -137,7 +137,7 @@ build_ref ()
 	return 1
     fi
 
-    if ! do_build "$rd" check; then
+    if ! do_build "$rd" check --no-prefix; then
 	return 1
     fi
 
@@ -188,6 +188,7 @@ build_test ()
     local target
     local dir
     local suffix
+    local opt
 
     case $id in
 	nobootstrap*)
@@ -198,6 +199,7 @@ build_test ()
 	bootstrap*)
 	    target=check
 	    dir=.
+	    opt="--no-prefix"
 	    suffix=
 	    ;;
 	*)
@@ -207,7 +209,7 @@ build_test ()
     esac
 
     # do build
-    do_build $d/with $target
+    do_build $d/with $target "$opt"
 
     if echo $id | egrep -q '\-notest$'; then
 	return
