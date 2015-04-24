@@ -16,6 +16,13 @@ makeflags=-j${parallel}
 target=
 fakebin=false
 
+adalang=
+if gnat > /dev/null; then
+    # To get gnat support
+    export CC=/usr/bin/gcc-4.6
+    adalang=",ada"
+fi
+
 if [ "$1" = "release" ]; then
   prefix="release/"
   configureflags="--enable-checking=release"
@@ -36,10 +43,17 @@ elif [ "$1" = "hppa64" ]; then
   ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$1" = "check" ]; then
     prefix="check/"
-    configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,ada,java,objc,c++"
+    configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
+elif [ "$1" = "check-noada" ]; then
+    prefix="check/"
+    configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
 elif [ "$1" = "nobootstrap" ]; then
   prefix="nobootstrap/"
-  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,ada,java,objc,c++"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
+  ALL_CFLAGS="-g3 -O0 -dH"
+elif [ "$1" = "nobootstrap-noada" ]; then
+  prefix="nobootstrap/"
+  configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
   ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$1" = "lean" ]; then
   prefix="lean/"
@@ -241,8 +255,6 @@ fi
 
 cd ${build}
 
-# To get gnat support
-export CC=/usr/bin/gcc-4.6
 
 # outdated trick. now fixed by setting LIBRARY_PATH in set_infra
 # ensure linker can find crti
