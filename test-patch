@@ -333,6 +333,13 @@ rebase ()
 
 main ()
 {
+    pwd=$(pwd -P)
+    test_patch_cfg=$pwd/test_patch.cfg
+
+    if [ -f $test_patch_cfg ]; then
+	. $test_patch_cfg
+    fi
+
     scriptdir=$(cd $(dirname $0); pwd -P)
 
     local root
