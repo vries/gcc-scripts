@@ -1,3 +1,13 @@
-parallel=$(($(egrep -c '^processor' /proc/cpuinfo) + 1))
-#parallel=2
+nprocessor=$(egrep -c '^processor' /proc/cpuinfo)
+
+# TODO: make shared build server test more generic.
+if hostname | grep -q '\-cs$'; then
+   # Don't use all processors on machines where we are not alone
+   useprocessor=$(($nprocessor * 3 / 4))
+else
+   useprocessor="$nprocessor"
+fi
+
+parallel=$(($useprocessor + 1))
+
 ulimit -c unlimited
