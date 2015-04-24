@@ -331,6 +331,16 @@ rebase ()
     g rebase --onto "$onto" "$base" "$branch"
 }
 
+notify ()
+{
+    local msg="$1"
+
+    local address
+    for address in "$@"; do
+	echo | mail -s "$msg" $address
+    done
+}
+
 main ()
 {
     pwd=$(pwd -P)
@@ -375,6 +385,7 @@ main ()
     if [ "$branch" == "ref" ]; then
 	setup_ref
 	get_ref
+	notify "test-patch $branch done" $notify_addresses
 	return
     fi
 
@@ -446,6 +457,8 @@ main ()
     for build in $builds; do
 	build_test $build
     done
+
+    notify "test-patch $branch done" $notify_addresses
 }
 
 main "$@" 2>&1 | tee TESTLOG
