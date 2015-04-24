@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/sh -x
 
 set -e
 
@@ -24,11 +24,16 @@ makeflags=-j${parallel}
 target=
 fakebin=false
 
+export CC=/usr/bin/gcc
+
 adalang=
 if gnat > /dev/null; then
     # To get gnat support
-    export CC=/usr/bin/gcc-4.6
-    adalang=",ada"
+    v=$(gnat | grep GNAT | awk '{print $2}')
+    if [ -f /usr/bin/gcc-$v ]; then
+	adalang=",ada"
+	export CC=/usr/bin/gcc-$v
+    fi
 fi
 
 if [ "$cfg" = "release" ]; then
