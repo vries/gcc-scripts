@@ -334,6 +334,7 @@ rebase ()
 notify ()
 {
     local msg="$1"
+    shift
 
     local address
     for address in "$@"; do
@@ -357,9 +358,6 @@ main ()
 
     git_initialized="false"
     git="$root/gcc.git"
-
-    #remote="lenny-4.8"
-    remote="lenny"
 
     # set base, builds, branch
     parse_args "$@"
