@@ -229,6 +229,7 @@ build_test ()
 	    $with/FAIL$suffix \
 	    2>&1 | tee DIFF$suffix
     )
+    diff_files="$diff_files $d/DIFF$suffix"
 }
 
 parse_args ()
@@ -331,14 +332,28 @@ rebase ()
     g rebase --onto "$onto" "$base" "$branch"
 }
 
+notify_file ()
+{
+    local subject="$1"
+    local body="$2"
+    shift 2
+
+    local address
+    for address in "$@"; do
+	cat "$body" \
+	    | mail -s "$subject" "$address"
+    done
+}
+
 notify ()
 {
-    local msg="$1"
+    local subject="$1"
     shift
 
     local address
     for address in "$@"; do
-	echo | mail -s "$msg" $address
+	echo \
+	    | mail -s "$subject" "$address"
     done
 }
 
@@ -426,6 +441,7 @@ main ()
 
     if $newref; then
 	get_ref
+	notify "test-patch ref-part done, continuing with branch" $notify_addresses
 	# todo: try to use backuptag
     fi    
 
@@ -456,7 +472,17 @@ main ()
 	build_test $build
     done
 
-    notify "test-patch $branch done" $notify_addresses
+    tmp=$(mktemp)
+    local file
+    for file in $diff_files; do
+	echo "$file:" \
+	    >> "$tmp"
+	cat $file \
+	    >> "$tmp"
+    done
+
+    notify_file "test-patch $branch done" "$tmp" $notify_addresses
+    rm -f "$tmp"
 }
 
 main "$@" 2>&1 | tee TESTLOG
