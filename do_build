@@ -30,9 +30,10 @@ adalang=
 if gnat > /dev/null; then
     # To get gnat support
     v=$(gnat | grep GNAT | awk '{print $2}')
-    if [ -f /usr/bin/gcc-$v ]; then
+    vbase=$(echo "$v" | sed 's/\.[0-9][0-9]*$//')
+    if [ -f /usr/bin/gcc-$vbase ]; then
 	adalang=",ada"
-	export CC=/usr/bin/gcc-$v
+	export CC=/usr/bin/gcc-$vbase
     fi
 fi
 
