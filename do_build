@@ -29,8 +29,11 @@ export CC=/usr/bin/gcc
 ada_supported=false
 if gnat > /dev/null; then
     # To get gnat support
-    v=$(gnat | grep GNAT | awk '{print $2}')
-    vbase=$(echo "$v" | sed 's/\.[0-9][0-9]*$//')
+    v=$(gnat \
+	| grep GNAT \
+	| awk '{print $2}')
+    vbase=$(echo "$v" \
+	| sed 's%\([0-9]\.[0-9]*\).*%\1%')
     if [ -f /usr/bin/gcc-$vbase ]; then
 	ada_supported=true
 	export CC=/usr/bin/gcc-$vbase
