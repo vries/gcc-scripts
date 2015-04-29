@@ -26,15 +26,20 @@ fakebin=false
 
 export CC=/usr/bin/gcc
 
-adalang=
+ada_supported=false
 if gnat > /dev/null; then
     # To get gnat support
     v=$(gnat | grep GNAT | awk '{print $2}')
     vbase=$(echo "$v" | sed 's/\.[0-9][0-9]*$//')
     if [ -f /usr/bin/gcc-$vbase ]; then
-	adalang=",ada"
+	ada_supported=true
 	export CC=/usr/bin/gcc-$vbase
     fi
+fi
+
+all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
+if $ada_supported; then
+    all_supported_languages="$all_supported_languages,ada"
 fi
 
 if [ "$cfg" = "release" ]; then
@@ -57,13 +62,13 @@ elif [ "$cfg" = "hppa64" ]; then
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "check" ]; then
     prefix="check/"
-    configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
+    configureflags="--enable-checking=yes,rtl --enable-languages=$all_supported_languages"
 elif [ "$cfg" = "check-noada" ]; then
     prefix="check/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
 elif [ "$cfg" = "nobootstrap" ]; then
     prefix="nobootstrap/"
-    configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++$adalang"
+    configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=$all_supported_languages"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "nobootstrap-noada" ]; then
     prefix="nobootstrap/"
