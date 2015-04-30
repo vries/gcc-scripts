@@ -3,11 +3,29 @@ nprocessor=$(egrep -c '^processor' /proc/cpuinfo)
 # TODO: make shared build server test more generic.
 if hostname | grep -q '\-cs$'; then
    # Don't use all processors on machines where we are not alone
-   useprocessor=$(($nprocessor * 3 / 4))
+   allow_nprocessor=$(($nprocessor * 3 / 4))
 else
-   useprocessor="$nprocessor"
+   allow_nprocessor="$nprocessor"
 fi
+# Add one, according to rule of thumb.
+allow_nprocessor=$(($allow_nprocessor + 1))
 
-parallel=$(($useprocessor + 1))
+min () {
+    local a="$1"
+    local b="$2"
+
+    echo $((($a < $b) ? $a : $b))
+}
+
+mem_available=$(free -m \
+    | grep ^Mem: \
+    | awk '{print $2}')
+
+# in MB
+required_mem_per_processor=600
+
+allow_nprocessor_mem=$(($mem_available / $required_mem_per_processor ))
+
+parallel=$(min $allow_nprocessor $allow_nprocessor_mem)
 
 ulimit -c unlimited
