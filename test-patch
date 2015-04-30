@@ -174,10 +174,12 @@ get_ref ()
     # nobootstrap ref - test
     do_test "$rd/nobootstrap"
     filter_sum $rd/nobootstrap/build > $rd/FAIL.nobootstrap
+    fail_files="$rd/FAIL.nobootstrap"
 
     # bootstrap ref - test
     do_test "$rd"
     filter_sum $rd/build > $rd/FAIL
+    fail_files="$fail_files $rd/FAIL"
 }
 
 build_test ()
@@ -332,6 +334,53 @@ rebase ()
     g rebase --onto "$onto" "$base" "$branch"
 }
 
+cat_files ()
+{
+    local tmp
+    tmp=$(mktemp)    
+
+    local first=true
+    local file
+    for file in "$@"; do
+	if $first; then
+	    first=false
+	else
+	    echo \
+		>> "$tmp"
+	fi
+	echo "$file:" \
+	    >> "$tmp"
+	cat $file \
+	    >> "$tmp"
+    done
+    echo "$tmp"
+}
+
+grep_files ()
+{
+    local pattern="$1"
+    shift
+
+    local tmp
+    tmp=$(mktemp)
+
+    local first=true
+    local file
+    for file in "$@"; do
+	if $first; then
+	    first=false
+	else
+	    echo \
+		>> "$tmp"
+	fi
+	echo "$file:" \
+	    >> "$tmp"
+	grep "$pattern" $file \
+	    >> "$tmp"
+    done
+    echo "$tmp"
+}
+
 notify_file ()
 {
     local subject="$1"
@@ -398,7 +447,10 @@ main ()
     if [ "$branch" == "ref" ]; then
 	setup_ref
 	get_ref
-	notify "test-patch $branch done" $notify_addresses
+	local body
+	body=$(grep_files :FAIL: $fail_files)
+	notify_file "test-patch $branch done" "$body" $notify_addresses
+	rm "$body"
 	return
     fi
 
@@ -441,7 +493,10 @@ main ()
 
     if $newref; then
 	get_ref
-	notify "test-patch ref-part done, continuing with branch" $notify_addresses
+	local body
+	body=$(grep_files :FAIL: $fail_files)
+	notify_file "test-patch ref-part done, continuing with branch" "$body" $notify_addresses
+	rm "$body"
 	# todo: try to use backuptag
     fi    
 
@@ -472,17 +527,10 @@ main ()
 	build_test $build
     done
 
-    tmp=$(mktemp)
-    local file
-    for file in $diff_files; do
-	echo "$file:" \
-	    >> "$tmp"
-	cat $file \
-	    >> "$tmp"
-    done
-
-    notify_file "test-patch $branch done" "$tmp" $notify_addresses
-    rm -f "$tmp"
+    local body
+    body=$(cat_files $diff_files)
+    notify_file "test-patch $branch done" "$body" $notify_addresses
+    rm -f "$body"
 }
 
 main "$@" 2>&1 | tee TESTLOG
