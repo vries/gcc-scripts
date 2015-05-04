@@ -1,4 +1,4 @@
-i=/home/vries/gcc_versions/infra
+i=$HOME/gcc_versions/infra
 
 # override existing libraries with infra libraries
 export LD_LIBRARY_PATH="${i}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
@@ -7,4 +7,8 @@ export LD_LIBRARY_PATH="${i}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 export PATH="$PATH:/data/vries/gcc_versions/script"
 
 # add multi-arch dir in case crt*.o is missing, as fallback
-export LIBRARY_PATH="${LIBRARY_PATH:+${LIBRARY_PATH}:}/usr/lib/x86_64-linux-gnu"
+case $(uname -p) in
+     x86_64)
+     export LIBRARY_PATH="${LIBRARY_PATH:+${LIBRARY_PATH}:}/usr/lib/x86_64-linux-gnu"
+     ;;
+esac
