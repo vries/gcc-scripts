@@ -19,7 +19,6 @@ cfg="$1"
 l=$(cd $(dirname $0); pwd)
 . ${l}/set_infra
 . ${l}/set_site
-makeflags=-j${parallel}
 
 target=
 fakebin=false
@@ -44,6 +43,48 @@ all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
 if $ada_supported; then
     all_supported_languages="$all_supported_languages,ada"
 fi
+
+uname_m=$(uname -m)
+uname_i=$(uname -i)
+uname_p=$(uname -p)
+
+if [ "$uname_m" = "$uname_i" ] \
+    && [ "$uname_i" = "$uname_p" ]; then
+    native="$uname_m"
+fi
+
+arm_arch_flags="
+--build=arm-linux-gnueabihf
+--host=arm-linux-gnueabihf
+--target=arm-linux-gnueabihf
+--enable-multiarch
+--disable-multilib
+--disable-sjlj-exceptions
+--with-arch=armv7-a
+--with-fpu=vfpv3-d16
+--with-float=hard
+--with-mode=thumb
+--with-system-zlib
+--disable-libmudflap
+--disable-libitm
+--disable-libquadmath
+--with-sysroot=/
+--enable-threads=posix
+--enable-shared"
+
+case "$native" in
+    "armv7l")
+	arch_flags="$arm_arch_flags"
+	# MK80LE overheats during bootstrap build, scale down number of palllel
+	# jobs.
+	parallel=$((parallel / 2))
+	;;
+    *)
+	arch_flags=""
+	;;
+esac
+
+makeflags=-j${parallel}
 
 if [ "$cfg" = "release" ]; then
     prefix="release/"
@@ -240,6 +281,8 @@ elif [ "$cfg" = "lean-c-old" ]; then
 elif [ $# -ne 0 ]; then
     usage
 fi
+
+configureflags="$configureflags $arch_flags"
 
 if $noprefix; then
     prefix=""
