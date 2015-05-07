@@ -280,6 +280,41 @@ do_fakebin ()
     configureflags="$configureflags --with-gnu-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
 }
 
+configure_make_install ()
+{
+    rm -Rf ${build} ${install}
+    mkdir -p ${build} ${install}
+
+    cd ${build}
+
+    ${p}/src/configure \
+	--prefix=${install} \
+	--with-cloog=${i} \
+	--with-ppl=${i} \
+	--with-gmp=${i} \
+	--with-mpfr=${i} \
+	--with-mpc=${i} \
+	--with-isl=${i} \
+	${configureflags} \
+	> CONFIGURELOG 2>&1
+
+    make \
+	${ALL_CFLAGS:+BOOT_CFLAGS="${ALL_CFLAGS}" CFLAGS="${ALL_CFLAGS}" \
+	CXXFLAGS="${ALL_CFLAGS}" STAGE1_CFLAGS="${ALL_CFLAGS}"} \
+	${CFLAGS_FOR_BUILD:+CFLAGS_FOR_BUILD="${CFLAGS_FOR_BUILD}"} \
+	${CFLAGS:+CFLAGS="${CFLAGS}"} \
+	${BOOT_CFLAGS:+BOOT_CFLAGS="${BOOT_CFLAGS}"} \
+	${STAGE1_CFLAGS:+STAGE1_CFLAGS="${STAGE1_CFLAGS}"} \
+	${CFLAGS_FOR_TARGET:+CFLAGS_FOR_TARGET="${CFLAGS_FOR_TARGET}"} \
+	${makeflags} ${maketarget} \
+	> MAKELOG 2>&1
+
+    make \
+	install \
+	> INSTALLLOG 2>&1
+}
+
+
 parse_args
 
 l=$(cd $(dirname $0); pwd)
@@ -348,32 +383,4 @@ true || (
     done
 )
 
-rm -Rf ${build} ${install}
-mkdir -p ${build} ${install}
-
-cd ${build}
-
-${p}/src/configure \
-    --prefix=${install} \
-    --with-cloog=${i} \
-    --with-ppl=${i} \
-    --with-gmp=${i} \
-    --with-mpfr=${i} \
-    --with-mpc=${i} \
-    --with-isl=${i} \
-    ${configureflags} \
-    > CONFIGURELOG 2>&1
-
-make \
-    ${ALL_CFLAGS:+BOOT_CFLAGS="${ALL_CFLAGS}" CFLAGS="${ALL_CFLAGS}" CXXFLAGS="${ALL_CFLAGS}" STAGE1_CFLAGS="${ALL_CFLAGS}"} \
-    ${CFLAGS_FOR_BUILD:+CFLAGS_FOR_BUILD="${CFLAGS_FOR_BUILD}"} \
-    ${CFLAGS:+CFLAGS="${CFLAGS}"} \
-    ${BOOT_CFLAGS:+BOOT_CFLAGS="${BOOT_CFLAGS}"} \
-    ${STAGE1_CFLAGS:+STAGE1_CFLAGS="${STAGE1_CFLAGS}"} \
-    ${CFLAGS_FOR_TARGET:+CFLAGS_FOR_TARGET="${CFLAGS_FOR_TARGET}"} \
-    ${makeflags} ${maketarget} \
-    > MAKELOG 2>&1
-
-make \
-    install \
-    > INSTALLLOG 2>&1
+configure_make_install
