@@ -331,6 +331,30 @@ fixup_multi_arch ()
 }
 
 
+set_paths ()
+{
+    if $noprefix; then
+	prefix=""
+    elif [ "$user_prefix" != "" ]; then
+	prefix="$user_prefix"
+    fi
+
+    # Ensure trailing '/'
+    prefix=$(echo $prefix \
+	| sed 's%/*$%/%')
+
+    p=$(pwd)
+
+    build=${p}/${prefix}build
+    install=${p}/${prefix}install
+    src=${p}/src
+
+    if [ ! -d ${src} ]; then
+	echo "sources not found: ${src}"
+	exit 1
+    fi
+}
+
 main ()
 {
     parse_args "$@"
@@ -362,26 +386,7 @@ main ()
 
     configureflags="$configureflags $arch_flags"
 
-    if $noprefix; then
-	prefix=""
-    elif [ "$user_prefix" != "" ]; then
-	prefix="$user_prefix"
-    fi
-
-    # Ensure trailing '/'
-    prefix=$(echo $prefix \
-	| sed 's%/*$%/%')
-
-    p=$(pwd)
-
-    build=${p}/${prefix}build
-    install=${p}/${prefix}install
-    src=${p}/src
-
-    if [ ! -d ${src} ]; then
-	echo "sources not found: ${src}"
-	exit 1
-    fi
+    set_paths
 
     if $fakebin; then
 	do_fakebin
