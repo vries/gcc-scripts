@@ -241,6 +241,10 @@ apply_cfg ()
 	makeflags="$makeflags MAKEINFO=missing"
 	makeflags="$makeflags POD2MAN=/bin/true"
     fi
+
+    if [ "$target" != "" ]; then
+	configureflags="$configureflags --target=$target"
+    fi
 }
 
 do_fakebin ()
@@ -320,10 +324,6 @@ src=${p}/src
 if [ ! -d ${src} ]; then
     echo "sources not found: ${src}"
     exit 1
-fi
-
-if [ "$target" != "" ]; then
-    configureflags="$configureflags --target=$target"
 fi
 
 if $fakebin; then
