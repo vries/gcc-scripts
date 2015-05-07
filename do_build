@@ -93,7 +93,7 @@ set_arch_flags ()
 
 apply_cfg ()
 {
-    prefix="$cfg"
+    cfg_prefix="$cfg"
     if [ "$cfg" = "release" ]; then
 	configureflags="--enable-checking=release"
 	ALL_CFLAGS="-g3 -O0 -dH"
@@ -111,13 +111,13 @@ apply_cfg ()
     elif [ "$cfg" = "check" ]; then
 	configureflags="--enable-checking=yes,rtl --enable-languages=$all_supported_languages"
     elif [ "$cfg" = "check-noada" ]; then
-	prefix="check/"
+	cfg_prefix="check/"
 	configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
     elif [ "$cfg" = "nobootstrap" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=$all_supported_languages"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "nobootstrap-noada" ]; then
-	prefix="nobootstrap/"
+	cfg_prefix="nobootstrap/"
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "lean" ]; then
@@ -265,7 +265,7 @@ apply_cfg ()
 
 do_fakebin ()
 {
-    binutils=${p}/${prefix}binutils
+    local binutils="${install}/binutils"
     if [ ! -d ${binutils} ]; then
 	mkdir -p ${binutils}
 	cp /bin/true ${binutils}/${target}-ar
@@ -333,10 +333,13 @@ fixup_multi_arch ()
 
 set_paths ()
 {
+    local prefix
     if $noprefix; then
 	prefix=""
     elif [ "$user_prefix" != "" ]; then
 	prefix="$user_prefix"
+    else
+	prefix="$cfg_prefix"
     fi
 
     # Ensure trailing '/'
