@@ -314,73 +314,80 @@ configure_make_install ()
 	> INSTALLLOG 2>&1
 }
 
-
-parse_args "$@"
-
-l=$(cd $(dirname $0); pwd)
-. ${l}/set_infra
-. ${l}/set_site
-
-target=
-fakebin=false
-
-detect_ada_support
-all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
-if $ada_supported; then
-    all_supported_languages="$all_supported_languages,ada"
-fi
-
-if $ada_supported; then
-    export CC="$ada_cc"
-else
-    export CC=/usr/bin/gcc
-fi
-
-set_arch_flags
-
-makeflags=-j${parallel}
+fixup_multi_arch ()
+{
+    # outdated trick. now fixed by setting LIBRARY_PATH in set_infra
+    # ensure linker can find crti
+    (
+	cd /usr/lib
+	os=$(cd x86_64-linux-gnu ; echo crt*.o)
+	for o in $os; do
+	    if [ ! -e $o ]; then
+		echo missing /usr/lib/$o
+		exit 1
+	    fi
+	done
+    )
+}
 
 
-apply_cfg
+main ()
+{
+    parse_args "$@"
 
-configureflags="$configureflags $arch_flags"
+    l=$(cd $(dirname $0); pwd)
+    . ${l}/set_infra
+    . ${l}/set_site
 
-if $noprefix; then
-    prefix=""
-elif [ "$user_prefix" != "" ]; then
-    prefix="$user_prefix"
-fi
+    target=
+    fakebin=false
 
-# Ensure trailing '/'
-prefix=$(echo $prefix \
-    | sed 's%/*$%/%')
+    detect_ada_support
+    all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
+    if $ada_supported; then
+	all_supported_languages="$all_supported_languages,ada"
+    fi
 
-p=$(pwd)
+    if $ada_supported; then
+	export CC="$ada_cc"
+    else
+	export CC=/usr/bin/gcc
+    fi
 
-build=${p}/${prefix}build
-install=${p}/${prefix}install
-src=${p}/src
+    set_arch_flags
 
-if [ ! -d ${src} ]; then
-    echo "sources not found: ${src}"
-    exit 1
-fi
+    makeflags=-j${parallel}
 
-if $fakebin; then
-    do_fakebin
-fi
+    apply_cfg
 
-# outdated trick. now fixed by setting LIBRARY_PATH in set_infra
-# ensure linker can find crti
-true || (
-    cd /usr/lib
-    os=$(cd x86_64-linux-gnu ; echo crt*.o)
-    for o in $os; do
-	if [ ! -e $o ]; then
-	    echo missing /usr/lib/$o
-	    exit 1
-	fi
-    done
-)
+    configureflags="$configureflags $arch_flags"
 
-configure_make_install
+    if $noprefix; then
+	prefix=""
+    elif [ "$user_prefix" != "" ]; then
+	prefix="$user_prefix"
+    fi
+
+    # Ensure trailing '/'
+    prefix=$(echo $prefix \
+	| sed 's%/*$%/%')
+
+    p=$(pwd)
+
+    build=${p}/${prefix}build
+    install=${p}/${prefix}install
+    src=${p}/src
+
+    if [ ! -d ${src} ]; then
+	echo "sources not found: ${src}"
+	exit 1
+    fi
+
+    if $fakebin; then
+	do_fakebin
+    fi
+
+    configure_make_install
+}
+
+main "$@"
