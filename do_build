@@ -8,6 +8,26 @@ usage ()
     exit 1;
 }
 
+detect_ada_support ()
+{
+    ada_supported=false
+    if gnat > /dev/null; then
+	# To get gnat support
+	local v
+	v=$(gnat \
+	    | grep GNAT \
+	    | awk '{print $2}')
+	local vbase
+	vbase=$(echo "$v" \
+	    | sed 's%\([0-9]\.[0-9]*\).*%\1%')
+	local cc="/usr/bin/gcc-$vbase"
+	if [ -f "$cc" ]; then
+	    ada_supported=true
+	    ada_cc="$cc"
+	fi
+    fi
+}
+
 noprefix=false
 if [ "$1" = "--no-prefix" ]; then
     noprefix=true
@@ -28,25 +48,16 @@ l=$(cd $(dirname $0); pwd)
 target=
 fakebin=false
 
-export CC=/usr/bin/gcc
-
-ada_supported=false
-if gnat > /dev/null; then
-    # To get gnat support
-    v=$(gnat \
-	| grep GNAT \
-	| awk '{print $2}')
-    vbase=$(echo "$v" \
-	| sed 's%\([0-9]\.[0-9]*\).*%\1%')
-    if [ -f /usr/bin/gcc-$vbase ]; then
-	ada_supported=true
-	export CC=/usr/bin/gcc-$vbase
-    fi
-fi
-
+detect_ada_support
 all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
 if $ada_supported; then
     all_supported_languages="$all_supported_languages,ada"
+fi
+
+if $ada_supported; then
+    export CC="$ada_cc"
+else
+    export CC=/usr/bin/gcc
 fi
 
 uname_m=$(uname -m)
