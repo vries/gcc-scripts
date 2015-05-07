@@ -298,6 +298,8 @@ configure_make_install ()
 	${configureflags} \
 	> CONFIGURELOG 2>&1
 
+    makeflags="$makeflags -j${parallel}"
+
     make \
 	${ALL_CFLAGS:+BOOT_CFLAGS="${ALL_CFLAGS}" CFLAGS="${ALL_CFLAGS}" \
 	CXXFLAGS="${ALL_CFLAGS}" STAGE1_CFLAGS="${ALL_CFLAGS}"} \
@@ -382,8 +384,6 @@ main ()
     fi
 
     set_arch_flags
-
-    makeflags=-j${parallel}
 
     apply_cfg
 
