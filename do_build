@@ -111,32 +111,27 @@ set_arch_flags
 
 makeflags=-j${parallel}
 
+prefix="$cfg"
 if [ "$cfg" = "release" ]; then
-    prefix="release/"
     configureflags="--enable-checking=release"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "dbg" ]; then
-    prefix="dbg/"
     configureflags="--enable-checking=yes,rtl"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "darwin10-ada" ]; then
     target="x86_64-apple-darwin10"
-    prefix="darwin10-ada/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=ada"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "hppa64" ]; then
     target="hppa64-hp-hpux11.11"
-    prefix="hppa64/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "check" ]; then
-    prefix="check/"
     configureflags="--enable-checking=yes,rtl --enable-languages=$all_supported_languages"
 elif [ "$cfg" = "check-noada" ]; then
     prefix="check/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
 elif [ "$cfg" = "nobootstrap" ]; then
-    prefix="nobootstrap/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=$all_supported_languages"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "nobootstrap-noada" ]; then
@@ -144,35 +139,27 @@ elif [ "$cfg" = "nobootstrap-noada" ]; then
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "lean" ]; then
-    prefix="lean/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,c++"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "lean-fortran" ]; then
-    prefix="lean-fortran/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=fortran"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "lean-c++" ]; then
-    prefix="lean-c++/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "lean-c" ]; then
-    prefix="lean-c/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "bootstrap-c" ]; then
-    prefix="bootstrap-c/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "bootstrap-c++" ]; then
-    prefix="bootstrap-c++/"
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "ada" ]; then
-    prefix="ada/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++,ada"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "avr" ]; then
-    prefix="avr/"
     target=avr-linux-gnu
   #fakebin=true
     binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
@@ -181,13 +168,11 @@ elif [ "$cfg" = "avr" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "bfin" ]; then
-    prefix="bfin/"
     target=bfin-unknown-elf
     fakebin=true
     configureflags="--enable-checking=yes,rtl --enable-languages=c"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "arm" ]; then
-    prefix="arm/"
     target="arm-linux-gnueabi"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -196,7 +181,6 @@ elif [ "$cfg" = "arm" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "ia64" ]; then
-    prefix="ia64/"
     target="ia64-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -205,7 +189,6 @@ elif [ "$cfg" = "ia64" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "mips" ]; then
-    prefix="mips/"
     target="mips-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -214,7 +197,6 @@ elif [ "$cfg" = "mips" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "hppa" ]; then
-    prefix="hppa/"
     target="hppa2.0w-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -223,7 +205,6 @@ elif [ "$cfg" = "hppa" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "ppc" ]; then
-    prefix="ppc/"
     target="ppc-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -232,7 +213,6 @@ elif [ "$cfg" = "ppc" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "s390" ]; then
-    prefix="s390/"
     target="s390-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -241,7 +221,6 @@ elif [ "$cfg" = "s390" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "sh" ]; then
-    prefix="sh/"
     target="sh-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -250,7 +229,6 @@ elif [ "$cfg" = "sh" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "sparc" ]; then
-    prefix="sparc/"
     target="sparc-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -259,7 +237,6 @@ elif [ "$cfg" = "sparc" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "aarch64" ]; then
-    prefix="aarch64/"
     target="aarch64-linux-gnu"
     fakebin=false
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
@@ -268,19 +245,16 @@ elif [ "$cfg" = "aarch64" ]; then
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "mips64" ]; then
-    prefix="mips64/"
     target="mips64-linux-gnu"
   #fakebin=true
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "mips64el" ]; then
-    prefix="mips64el/"
     target="mips64el-linux-gnu"
   #fakebin=true
     configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
     ALL_CFLAGS="-g3 -O0 -dH"
 elif [ "$cfg" = "hppa" ]; then
-    prefix="hppa/"
     target="hppa-linux"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,java --disable-tls --disable-threads --disable-shared --disable-libquadmath --disable-libssp --without-libffi --disable-libgomp"
     ALL_CFLAGS="-g3 -O0 -dH"
@@ -288,16 +262,13 @@ elif [ "$cfg" = "hppa" ]; then
     export PATH="$binutils:$PATH"
     configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
 elif [  "$cfg" = "pgo" ]; then
-    prefix="pgo/"
     maketarget=profiledbootstrap
 elif [  "$cfg" = "i686-pgo" ]; then
   # didn't get this to work
-    prefix="i686-pgo/"
     maketarget=profiledbootstrap
     BOOT_CFLAGS="-m32"
     CFLAGS_FOR_TARGET="-m32"
 elif [ "$cfg" = "lean-c-old" ]; then
-    prefix="lean-c-old/"
     configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
     ALL_CFLAGS="-g3 -O0 -dH"
   # https://dev.openwrt.org/ticket/13039
