@@ -315,7 +315,7 @@ configure_make_install ()
 }
 
 
-parse_args
+parse_args "$@"
 
 l=$(cd $(dirname $0); pwd)
 . ${l}/set_infra
