@@ -322,9 +322,6 @@ if [ ! -d ${src} ]; then
     exit 1
 fi
 
-rm -Rf ${build} ${install}
-mkdir -p ${build} ${install}
-
 if [ "$target" != "" ]; then
     configureflags="$configureflags --target=$target"
 fi
@@ -345,6 +342,9 @@ true || (
 	fi
     done
 )
+
+rm -Rf ${build} ${install}
+mkdir -p ${build} ${install}
 
 cd ${build}
 
