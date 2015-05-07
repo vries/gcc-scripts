@@ -333,9 +333,6 @@ if $fakebin; then
     do_fakebin
 fi
 
-cd ${build}
-
-
 # outdated trick. now fixed by setting LIBRARY_PATH in set_infra
 # ensure linker can find crti
 true || (
@@ -348,6 +345,8 @@ true || (
 	fi
     done
 )
+
+cd ${build}
 
 ${p}/src/configure \
     --prefix=${install} \
