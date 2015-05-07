@@ -243,6 +243,23 @@ apply_cfg ()
     fi
 }
 
+do_fakebin ()
+{
+    binutils=${p}/${prefix}binutils
+    if [ ! -d ${binutils} ]; then
+	mkdir -p ${binutils}
+	cp /bin/true ${binutils}/${target}-ar
+	cp /home/vries/gcc_versions/script/dummyas ${binutils}/${target}-as
+	cp /home/vries/gcc_versions/script/dummyld ${binutils}/${target}-ld
+	cp /home/vries/gcc_versions/script/dummynm ${binutils}/${target}-nm
+	#cp /bin/true ${binutils}/${target}-nm
+	cp /bin/touch ${binutils}/${target}-ranlib
+	cp /bin/true ${binutils}/${target}-strip
+    fi
+    export PATH="${binutils}:$PATH"
+    configureflags="$configureflags --with-gnu-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+}
+
 noprefix=false
 if [ "$1" = "--no-prefix" ]; then
     noprefix=true
@@ -313,19 +330,7 @@ if [ "$target" != "" ]; then
 fi
 
 if $fakebin; then
-    binutils=${p}/${prefix}binutils
-    if [ ! -d ${binutils} ]; then
-	mkdir -p ${binutils}
-	cp /bin/true ${binutils}/${target}-ar
-	cp /home/vries/gcc_versions/script/dummyas ${binutils}/${target}-as
-	cp /home/vries/gcc_versions/script/dummyld ${binutils}/${target}-ld
-	cp /home/vries/gcc_versions/script/dummynm ${binutils}/${target}-nm
-    #cp /bin/true ${binutils}/${target}-nm
-	cp /bin/touch ${binutils}/${target}-ranlib
-	cp /bin/true ${binutils}/${target}-strip
-    fi
-    export PATH="${binutils}:$PATH"
-    configureflags="$configureflags --with-gnu-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+    do_fakebin
 fi
 
 cd ${build}
