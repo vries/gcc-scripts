@@ -59,6 +59,7 @@ set_arch_flags ()
 	native="$uname_m"
     fi
 
+    local arch_flags
     local arm_arch_flags="
 --build=arm-linux-gnueabihf
 --host=arm-linux-gnueabihf
@@ -89,6 +90,8 @@ set_arch_flags ()
 	    arch_flags=""
 	    ;;
     esac
+
+    configureflags="$configureflags $arch_flags"
 }
 
 apply_cfg ()
@@ -383,11 +386,10 @@ main ()
 	export CC=/usr/bin/gcc
     fi
 
-    set_arch_flags
 
     apply_cfg
 
-    configureflags="$configureflags $arch_flags"
+    set_arch_flags
 
     set_paths
 
