@@ -2,9 +2,9 @@
 
 set -e
 
-usage()
+usage ()
 {
-    echo "do_build [ --no-prefix ] <build configuration>"
+    echo "do_build [ --no-prefix ] [ --prefix <prefix> ] <build configuration>"
     exit 1;
 }
 
@@ -12,6 +12,11 @@ noprefix=false
 if [ "$1" = "--no-prefix" ]; then
     noprefix=true
     shift
+elif [ "$1" = "--prefix" ]; then
+    user_prefix="$2"
+    shift 2
+elif [ $# -ne 0 ]; then
+    usage
 fi
 
 cfg="$1"
@@ -278,15 +283,19 @@ elif [ "$cfg" = "lean-c-old" ]; then
   # https://dev.openwrt.org/ticket/13039
     makeflags="$makeflags MAKEINFO=missing"
     makeflags="$makeflags POD2MAN=/bin/true"
-elif [ $# -ne 0 ]; then
-    usage
 fi
 
 configureflags="$configureflags $arch_flags"
 
 if $noprefix; then
     prefix=""
+elif [ "$user_prefix" != "" ]; then
+    prefix="$user_prefix"
 fi
+
+# Ensure trailing '/'
+prefix=$(echo $prefix \
+    | sed 's%/*$%/%')
 
 p=$(pwd)
 
