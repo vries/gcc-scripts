@@ -8,6 +8,22 @@ usage ()
     exit 1;
 }
 
+parse_args ()
+{
+    noprefix=false
+    if [ "$1" = "--no-prefix" ]; then
+	noprefix=true
+	shift
+    elif [ "$1" = "--prefix" ]; then
+	user_prefix="$2"
+	shift 2
+    elif [ $# -ne 0 ]; then
+	usage
+    fi
+
+    cfg="$1"
+}
+
 detect_ada_support ()
 {
     ada_supported=false
@@ -264,20 +280,7 @@ do_fakebin ()
     configureflags="$configureflags --with-gnu-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
 }
 
-noprefix=false
-if [ "$1" = "--no-prefix" ]; then
-    noprefix=true
-    shift
-elif [ "$1" = "--prefix" ]; then
-    user_prefix="$2"
-    shift 2
-fi
-
-if [ $# -ne 1 ]; then
-    usage
-fi
-
-cfg="$1"
+parse_args
 
 l=$(cd $(dirname $0); pwd)
 . ${l}/set_infra
