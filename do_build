@@ -17,7 +17,9 @@ parse_args ()
     elif [ "$1" = "--prefix" ]; then
 	user_prefix="$2"
 	shift 2
-    elif [ $# -ne 0 ]; then
+    fi
+
+    if [ $# -ne 1 ]; then
 	usage
     fi
 
