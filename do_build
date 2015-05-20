@@ -288,6 +288,10 @@ configure_make_install ()
     rm -Rf ${build} ${install}
     mkdir -p ${build} ${install}
 
+    if $fakebin; then
+	do_fakebin
+    fi
+
     cd ${build}
 
     ${p}/src/configure \
@@ -392,10 +396,6 @@ main ()
     set_arch_flags
 
     set_paths
-
-    if $fakebin; then
-	do_fakebin
-    fi
 
     configure_make_install
 }
