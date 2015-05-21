@@ -41,4 +41,5 @@ exec \
     $builds \
     $ref \
     $boards \
+    $base \
     $branch
