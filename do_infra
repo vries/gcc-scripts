@@ -59,16 +59,14 @@ if [ ! -f $p/lib/libppl.a ]; then
 	| tee ${l}/ppl.log
 fi
 
-if [ ! -f $p/lib/libppl_c.a ]; then
+if [ ! -f $p/lib/libcloog-isl.a ]; then
     cd ${s} \
-	&& tar xfz ${d}/cloog-ppl-0.15.10.tar.gz \
-	&& ln -s cloog-ppl* cloog-ppl
-    cd ${s}/cloog-ppl \
-	&& patch -p0 < ${d}/all.diff
-    mkdir ${b}/cloog-ppl
+	&& tar xfz ${d}/cloog-0.18.1.tar.gz \
+	&& ln -s cloog-* cloog
+    mkdir ${b}/cloog
     { 
-	cd ${b}/cloog-ppl \
-	    && ${s}/cloog-ppl/configure --prefix=${p} --with-ppl=${p} --with-gmp=${p} \
+	cd ${b}/cloog \
+	    && ${s}/cloog/configure --prefix=${p} --with-ppl=${p} --with-gmp-prefix=${p} \
 	    && make ${makeflags} \
 	    && make install \
 	    || exit 1;
