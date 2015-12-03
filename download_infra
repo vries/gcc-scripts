@@ -8,7 +8,7 @@ url=ftp://gcc.gnu.org/pub/gcc/infrastructure
 minimal="
 gmp-4.3.2.tar.bz2
 ppl-0.11.tar.gz
-cloog-ppl-0.15.11.tar.gz
+cloog-0.18.1.tar.gz
 mpfr-2.4.2.tar.bz2
 mpc-0.8.1.tar.gz
 isl-0.14.tar.bz2
