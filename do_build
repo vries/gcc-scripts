@@ -304,9 +304,9 @@ do_fakebin ()
     if [ ! -d ${binutils} ]; then
 	mkdir -p ${binutils}
 	cp /bin/true ${binutils}/${target}-ar
-	cp /home/vries/gcc_versions/script/dummyas ${binutils}/${target}-as
-	cp /home/vries/gcc_versions/script/dummyld ${binutils}/${target}-ld
-	cp /home/vries/gcc_versions/script/dummynm ${binutils}/${target}-nm
+	cp /home/vries/gcc_versions/scripts/dummyas ${binutils}/${target}-as
+	cp /home/vries/gcc_versions/scripts/dummyld ${binutils}/${target}-ld
+	cp /home/vries/gcc_versions/scripts/dummynm ${binutils}/${target}-nm
 	#cp /bin/true ${binutils}/${target}-nm
 	cp /bin/touch ${binutils}/${target}-ranlib
 	cp /bin/true ${binutils}/${target}-strip
