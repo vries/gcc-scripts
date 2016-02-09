@@ -140,6 +140,15 @@ apply_cfg ()
     elif [ "$cfg" = "bootstrap-c" ]; then
 	configureflags="--enable-checking=yes,rtl --enable-languages=c"
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "bootstrap-c-nomultilib" ]; then
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-multilib"
+	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "bootstrap-c-opt" ]; then
+	configureflags="--enable-checking=yes,rtl --enable-languages=c"
+    elif [ "$cfg" = "bootstrap-c-release" ]; then
+	configureflags="--enable-checking=release --enable-languages=c"
+    elif [ "$cfg" = "bootstrap-fortran-release" ]; then
+	configureflags="--enable-checking=release --enable-languages=fortran"
     elif [ "$cfg" = "bootstrap-c++" ]; then
 	configureflags="--enable-checking=yes,rtl --enable-languages=c,c++"
 	ALL_CFLAGS="-g3 -O0 -dH"
