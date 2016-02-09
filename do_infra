@@ -106,7 +106,8 @@ fi
 
 if [ ! -f $p/lib/libisl.a ]; then
     cd ${s} \
-	&& tar xfj ${d}/isl-0.14.tar.bz2 \
+	&& rm -Rf isl* \
+	&& tar xfj ${d}/isl-0.15.tar.bz2 \
 	&& ln -s isl* isl
     mkdir ${b}/isl
     {
