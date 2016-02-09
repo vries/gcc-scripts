@@ -340,14 +340,18 @@ configure_make_install ()
     makeflags="$makeflags -j${parallel}"
 
     make \
-	${ALL_CFLAGS:+BOOT_CFLAGS="${ALL_CFLAGS}" CFLAGS="${ALL_CFLAGS}" \
-	CXXFLAGS="${ALL_CFLAGS}" STAGE1_CFLAGS="${ALL_CFLAGS}"} \
+	${ALL_CFLAGS:+ \
+	  BOOT_CFLAGS="${ALL_CFLAGS}" \
+	  CFLAGS="${ALL_CFLAGS}" \
+	  CXXFLAGS="${ALL_CFLAGS}" \
+	  STAGE1_CFLAGS="${ALL_CFLAGS}"} \
 	${CFLAGS_FOR_BUILD:+CFLAGS_FOR_BUILD="${CFLAGS_FOR_BUILD}"} \
 	${CFLAGS:+CFLAGS="${CFLAGS}"} \
 	${BOOT_CFLAGS:+BOOT_CFLAGS="${BOOT_CFLAGS}"} \
 	${STAGE1_CFLAGS:+STAGE1_CFLAGS="${STAGE1_CFLAGS}"} \
 	${CFLAGS_FOR_TARGET:+CFLAGS_FOR_TARGET="${CFLAGS_FOR_TARGET}"} \
-	${makeflags} ${maketarget} \
+	${makeflags} \
+	${maketarget} \
 	> MAKELOG 2>&1
 
     make \
