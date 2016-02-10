@@ -1,4 +1,14 @@
-i=$HOME/gcc_versions/infra
+i=""
+if [ -f ./USE-INFRA ]; then
+   infra_cfg=$(cat ./USE-INFRA)
+   if [ -d "$HOME/gcc_versions/infra/$infra_cfg" ]; then
+      i="$HOME/gcc_versions/infra/$infra_cfg"
+   fi
+fi
+
+if [ "$i" = "" ]; then
+   i=$HOME/gcc_versions/infra/current
+fi
 
 # override existing libraries with infra libraries
 export LD_LIBRARY_PATH="${i}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
