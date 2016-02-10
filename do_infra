@@ -1,13 +1,22 @@
 #!/bin/sh -x
 
+
+# exit on error
+
 set -e
+
+
+# set -j, ulimit
 
 l=$(cd $(dirname $0); pwd)
 . ${l}/set_site
 
 makeflags=-j${parallel}
 
-clean=false
+
+# cleanup dirs and files
+
+clean=true
 
 if $clean; then
     rm -Rf \
@@ -18,6 +27,9 @@ if $clean; then
 	*~
 fi
 
+
+# setup dirs
+
 mkdir -p src build log
 
 p=$(pwd)
@@ -26,17 +38,106 @@ d=${p}/setup
 b=${p}/build
 l=${p}/log
 
-if [ ! -f $p/lib/libgmp.a ]; then
+
+# get version and choose components
+
+version=$(cat INFRA)
+
+# always needed
+need_gmp=true
+need_mpfr=true
+need_mpc=true
+
+# not always needed
+need_ppl=false
+need_cloog=false
+need_isl=false
+
+case $version in
+
+    # 4.9 and later
+    4.9)
+	# gcc needs isl.
+	need_isl=true
+	isl_ver=0.15
+	;;
+
+    # just 4.8
+    4.8)
+	# gcc needs cloog and isl 0.10 - 0.14.
+	#
+	# From https://gcc.gnu.org/bugzilla/show_bug.cgi?id=59878:
+	# cloog-0.18.0.tar.gz has embedded isl 0.11.1 with broken isl_version.
+	# cloog-0.18.1.tar.gz has embedded isl 0.12.1 with broken isl_version.
+	# cloog-0.18.2.tar.gz has embedded isl 0.12.1 with broken isl_version.
+	# cloog-0.18.3.tar.gz has embedded isl 0.14.
+	# cloog-0.18.4.tar.gz has embedded isl 0.15.
+	#
+	# cloog-0.18.1.tar.gz is last recommended version.  We can't use the
+	# embedded isl version 0.12.1, because isl_version is broken.  So we use
+	# isl version 0.12.2, the version recommended with cloog-0.18.1.tar.gz,
+	# and available at ftp://gcc.gnu.org/pub/gcc/infrastructure.
+	need_cloog=true
+	cloog_ver=0.18.1
+	need_isl=true
+	isl_ver=0.12.2
+	;;
+
+    # 4.5 - 4.7
+    4.7)
+	# gcc needs cloog
+	# gcc 4.5 needs ppl 0.10 or later.
+	# gcc 4.6/4.7 needs ppl 0.11 or later.
+	# cloog needs ppl 0.10 or later.
+	need_cloog=true
+	cloog_ver=ppl-0.15.11
+	need_ppl=true
+	ppl_ver=0.11
+	;;
+
+    # 4.4
+    4.4)
+	# gcc needs cloog
+	# gcc needs ppl 0.10.
+	# cloog needs ppl 0.10 or later.
+	need_cloog=true
+	cloog_ver=ppl-0.15.11
+	need_ppl=true
+	ppl_ver=0.10.2
+	;;
+
+    
+    # 4.4
+    4.3)
+	# no graphite, so no cloog, no ppl
+	true
+	;;
+    *)
+	exit 1
+	;;
+esac
+
+
+# GMP
+
+if $need_gmp && [ ! -f $p/lib/libgmp.a ]; then
+
+    gmp_configure_extra="--enable-cxx"
+
     cd ${s} \
+	&& rm -Rf gmp* \
 	&& tar xfj ${d}/gmp-4.3.2.tar.bz2 \
 	&& ln -s gmp* gmp
+
+    rm -Rf ${b}/gmp
     mkdir ${b}/gmp
+
     {
 	# See https://lists.debian.org/debian-gcc/2009/11/msg00069.html for
 	# reason for CPPFLAGS=-fexceptions.
 	cd ${b}/gmp \
 	    && export CPPFLAGS=-fexceptions \
-	    && ${s}/gmp/configure --enable-cxx --prefix=${p} \
+	    && ${s}/gmp/configure --prefix=${p} ${gmp_configure_extra} \
 	    && make ${makeflags} \
 	    && make install \
 	    || exit 1;
@@ -44,14 +145,29 @@ if [ ! -f $p/lib/libgmp.a ]; then
 	| tee ${l}/gmp.log
 fi
 
-if [ ! -f $p/lib/libppl.a ]; then
+
+# PPL
+
+if $need_ppl && [ ! -f $p/lib/libppl.a ]; then
+
+    ppl_configure_deps="--with-libgmp-prefix=${p}"
+
+    if [ "${ppl_ver}" = "0.10.2" ]; then
+	# https://sourceware.org/ml/crossgcc/2012-04/msg00039.html
+	ppl_configure_extra="--with-cflags=-fpermissive --with-cxxflags=-fpermissive"
+    fi
+
     cd ${s} \
-	&& tar xfz ${d}/ppl-0.11.tar.gz \
+	&& rm -Rf ppl* \
+	&& tar xfz ${d}/ppl-${ppl_ver}.tar.gz \
 	&& ln -s ppl* ppl
+
+    rm -Rf ${b}/ppl
     mkdir ${b}/ppl
+
     {
 	cd ${b}/ppl \
-	    && ${s}/ppl/configure --prefix=${p} --with-libgmp-prefix=${p} \
+	    && ${s}/ppl/configure --prefix=${p} ${ppl_configure_deps} ${ppl_configure_extra} \
 	    && make ${makeflags} \
 	    && make install \
 	    || exit 1;
@@ -59,60 +175,24 @@ if [ ! -f $p/lib/libppl.a ]; then
 	| tee ${l}/ppl.log
 fi
 
-if [ ! -f $p/lib/libcloog-isl.a ]; then
-    cd ${s} \
-	&& tar xfz ${d}/cloog-0.18.1.tar.gz \
-	&& ln -s cloog-* cloog
-    mkdir ${b}/cloog
-    { 
-	cd ${b}/cloog \
-	    && ${s}/cloog/configure --prefix=${p} --with-ppl=${p} --with-gmp-prefix=${p} \
-	    && make ${makeflags} \
-	    && make install \
-	    || exit 1;
-    } 2>&1 \
-	| tee ${l}/cloog.log
-fi
 
-if [ ! -f $p/lib/libmpfr.a ]; then
-    cd ${s} \
-	&& tar xfj ${d}/mpfr-2.4.2.tar.bz2 \
-	&& ln -s mpfr* mpfr
-    mkdir ${b}/mpfr
-    {
-	cd ${b}/mpfr \
-	    && ${s}/mpfr/configure --prefix=${p} --with-gmp=${p} \
-	    && make ${makeflags} \
-	    && make install \
-	    || exit 1;
-    } 2>&1 \
-	| tee ${l}/mpfr.log
-fi
+# ISL
 
-if [ ! -f $p/lib/libmpc.a ]; then
-    cd ${s} \
-	&& tar xfz ${d}/mpc-0.8.1.tar.gz \
-	&& ln -s mpc* mpc
-    mkdir ${b}/mpc
-    {
-	cd ${b}/mpc \
-	    && ${s}/mpc/configure --prefix=${p} --with-mpfr=${p} --with-gmp=${p} \
-	    && make ${makeflags} \
-	    && make install \
-	    || exit 1;
-    } 2>&1 \
-	| tee ${l}/mpc.log
-fi
+if $need_isl && [ ! -f $p/lib/libisl.a ]; then
 
-if [ ! -f $p/lib/libisl.a ]; then
+    isl_configure_deps="--with-gmp-prefix=${p}"
+
     cd ${s} \
 	&& rm -Rf isl* \
-	&& tar xfj ${d}/isl-0.15.tar.bz2 \
+	&& tar xfj ${d}/isl-${isl_ver}.tar.bz2 \
 	&& ln -s isl* isl
+
+    rm -Rf ${b}/isl
     mkdir ${b}/isl
+
     {
 	cd ${b}/isl \
-	    && ${s}/isl/configure --prefix=${p} --with-gmp-prefix=${p} \
+	    && ${s}/isl/configure --prefix=${p} ${isl_configure_deps} \
 	    && make ${makeflags} \
 	    && make install \
 	    || exit 1;
@@ -120,10 +200,127 @@ if [ ! -f $p/lib/libisl.a ]; then
 	| tee ${l}/isl.log
 fi
 
+
+# CLOOG
+
+if $need_cloog; then
+
+    if $need_ppl; then
+	cloog_lib=libcloog.a
+	cloog_configure_deps="--with-ppl=${p}"
+    else
+	cloog_lib=libcloog-isl.a	
+	# Ignore bundled isl, use --with-isl=system.  Not sure why with-gmp-prefix is
+	# needed (AFAIU isl needs gmp, not cloog), maybe a cloog configure bug.
+	cloog_configure_deps="--with-isl=system --with-isl-prefix=${p} --with-gmp-prefix=${p}"
+    fi
+
+    if [ ! -f $p/lib/$cloog_lib ]; then
+
+	cd ${s} \
+	    && rm -Rf cloog* \
+	    && tar xfz ${d}/ $[d}/cloog-${cloog_ver}.tar.gz \
+	    && ln -s cloog-* cloog
+
+	rm -Rf ${b}/cloog
+	mkdir ${b}/cloog
+
+	{ 
+	    cd ${b}/cloog \
+		&& ${s}/cloog/configure --prefix=${p} ${cloog_configure_deps} \
+		&& make ${makeflags} \
+		&& make install \
+		|| exit 1;
+	} 2>&1 \
+	    | tee ${l}/cloog.log
+    fi
+fi
+
+
+# MPFR
+
+if $needmpfr && [ ! -f $p/lib/libmpfr.a ]; then
+
+    mpfr_configure_deps="--with-gmp=${p}"
+
+    cd ${s} \
+	&& rm -Rf mpfr* \
+	&& tar xfj ${d}/mpfr-2.4.2.tar.bz2 \
+	&& ln -s mpfr* mpfr
+
+    rm -Rf ${b}/mpfr
+    mkdir ${b}/mpfr
+
+    {
+	cd ${b}/mpfr \
+	    && ${s}/mpfr/configure --prefix=${p} ${mpfr_configure_deps} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/mpfr.log
+fi
+
+
+# MPC
+
+if $need_mpc && [ ! -f $p/lib/libmpc.a ]; then
+
+    mpc_configure_deps="--with-mpfr=${p} --with-gmp=${p}"
+
+    cd ${s} \
+	&& rm -Rf mpc* \
+	&& tar xfz ${d}/mpc-0.8.1.tar.gz \
+	&& ln -s mpc* mpc
+
+    rm -Rf ${b}/mpc
+    mkdir ${b}/mpc
+
+    {
+	cd ${b}/mpc \
+	    && ${s}/mpc/configure --prefix=${p} ${mpc_configure_deps} \
+	    && make ${makeflags} \
+	    && make install \
+	    || exit 1;
+    } 2>&1 \
+	| tee ${l}/mpc.log
+fi
+
+
+# cleanup
+
 cd ${p}
 
 if $clean; then
-    for d in  log src build; do
+    for d in log src build; do
 	tar cvfz ${d}.tgz ${d} && rm -Rf ${d}
     done
+fi
+
+
+# create INFRA-CONFIGURE
+
+rm -f INFRA-CONFIGURE
+if $need_gmp; then
+    echo "--with-gmp=$p" >> INFRA-CONFIGURE
+fi
+
+if $need_ppl; then
+    echo "--with-ppl=$p" >> INFRA-CONFIGURE
+fi
+
+if $need_cloog; then
+    echo "--with-cloog=$p" >> INFRA-CONFIGURE
+fi
+
+if $needmpfr; then
+    echo "--with-mpfr=$p" >> INFRA-CONFIGURE
+fi
+
+if $need_mpc; then
+    echo "--with-mpc=$p" >> INFRA-CONFIGURE
+fi
+
+if $need_isl; then
+    echo "--with-isl=$p" >> INFRA-CONFIGURE
 fi
