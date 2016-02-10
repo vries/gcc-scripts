@@ -328,12 +328,7 @@ configure_make_install ()
 
     ${p}/src/configure \
 	--prefix=${install} \
-	--with-cloog=${i} \
-	--with-ppl=${i} \
-	--with-gmp=${i} \
-	--with-mpfr=${i} \
-	--with-mpc=${i} \
-	--with-isl=${i} \
+	$(cat ${i}/INFRA-CONFIGURE) \
 	${configureflags} \
 	> CONFIGURELOG 2>&1
 
