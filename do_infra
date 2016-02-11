@@ -219,7 +219,7 @@ if $need_cloog; then
 
 	cd ${s} \
 	    && rm -Rf cloog* \
-	    && tar xfz ${d}/ $[d}/cloog-${cloog_ver}.tar.gz \
+	    && tar xfz ${d}/cloog-${cloog_ver}.tar.gz \
 	    && ln -s cloog-* cloog
 
 	rm -Rf ${b}/cloog
