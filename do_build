@@ -96,9 +96,29 @@ set_arch_flags ()
     configureflags="$configureflags $arch_flags"
 }
 
+set_cfg_prefix ()
+{
+    case "$cfg" in
+	"check-noada")
+	    cfg_prefix="check/"
+	    ;;
+	"nobootstrap-noada")
+	    cfg_prefix="nobootstrap/"
+	    ;;
+	"lean-c-intelmic-accel")
+	    cfg_prefix="lean-c-intelmic/"
+	    ;;
+	"lean-c-intelmic-host")
+	    cfg_prefix="lean-c-intelmic/"
+	    ;;
+	*)
+	    cfg_prefix="$cfg"
+	    ;;
+    esac
+}
+
 apply_cfg ()
 {
-    cfg_prefix="$cfg"
     if [ "$cfg" = "release" ]; then
 	configureflags="--enable-checking=release"
 	ALL_CFLAGS="-g3 -O0 -dH"
@@ -116,13 +136,11 @@ apply_cfg ()
     elif [ "$cfg" = "check" ]; then
 	configureflags="--enable-checking=yes,rtl --enable-languages=$all_supported_languages"
     elif [ "$cfg" = "check-noada" ]; then
-	cfg_prefix="check/"
 	configureflags="--enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
     elif [ "$cfg" = "nobootstrap" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=$all_supported_languages"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "nobootstrap-noada" ]; then
-	cfg_prefix="nobootstrap/"
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,fortran,java,objc,c++"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "lean" ]; then
@@ -141,6 +159,16 @@ apply_cfg ()
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
 	CFLAGS_FOR_TARGET="-g3 -O0 -dH"
+    elif [ "$cfg" = "lean-c-intelmic-accel" ]; then
+	build="${build}/accel"
+	install="${install}/accel"
+	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c --build=x86_64-intelmicemul-linux-gnu --host=x86_64-intelmicemul-linux-gnu --target=x86_64-intelmicemul-linux-gnu --enable-as-accelerator-for=x86_64-pc-linux-gnu" 
+	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "lean-c-intelmic-host" ]; then
+	build="${build}/host"
+	install="${install}/host"
+	configureflags="--disable-bootstrap --build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --target=x86_64-pc-linux-gnu --enable-checking=yes,rtl --enable-languages=c --enable-offload-targets=x86_64-intelmicemul-linux-gnu=${install}/accel"
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "bootstrap-c" ]; then
 	configureflags="--enable-checking=yes,rtl --enable-languages=c"
 	ALL_CFLAGS="-g3 -O0 -dH"
@@ -430,12 +458,13 @@ main ()
 	export CC=/usr/bin/gcc
     fi
 
+    set_cfg_prefix
+
+    set_paths
 
     apply_cfg
 
     set_arch_flags
-
-    set_paths
 
     configure_make_install
 }
