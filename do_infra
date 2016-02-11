@@ -16,7 +16,7 @@ makeflags=-j${parallel}
 
 # cleanup dirs and files
 
-clean=true
+clean=false
 
 if $clean; then
     rm -Rf \
