@@ -328,6 +328,12 @@ apply_cfg ()
 	# https://dev.openwrt.org/ticket/13039
 	makeflags="$makeflags MAKEINFO=missing"
 	makeflags="$makeflags POD2MAN=/bin/true"
+    elif [ "$cfg" = "lean-old-nomultilib" ]; then
+	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c,c++,fortran --enable-lto --disable-multilib"
+	ALL_CFLAGS="-g3 -O0 -dH"
+	# https://dev.openwrt.org/ticket/13039
+	makeflags="$makeflags MAKEINFO=missing"
+	makeflags="$makeflags POD2MAN=/bin/true"
     fi
 
     if [ "$target" != "" ]; then
