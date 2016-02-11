@@ -168,6 +168,11 @@ apply_cfg ()
 	fakebin=true
 	configureflags="--enable-checking=yes,rtl --enable-languages=c"
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "m68k" ]; then
+	target=m68k-linux-gnu
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c"
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "arm" ]; then
 	target="arm-linux-gnueabi"
 	fakebin=false
