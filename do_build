@@ -278,6 +278,11 @@ apply_cfg ()
 	fakebin=true
 	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-tls --disable-threads"
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "alpha-vms" ]; then
+	target="alpha-dec-vms"
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-tls --disable-threads"
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "spu" ]; then
 	target="spu-elf"
 	fakebin=true
