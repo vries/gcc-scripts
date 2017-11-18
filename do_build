@@ -105,11 +105,11 @@ set_cfg_prefix ()
 	"nobootstrap-noada")
 	    cfg_prefix="nobootstrap/"
 	    ;;
-	"lean-c-intelmic-accel")
-	    cfg_prefix="lean-c-intelmic/"
+	"lean-c-intelmicemul-accel")
+	    cfg_prefix="lean-c-intelmicemul/"
 	    ;;
-	"lean-c-intelmic-host")
-	    cfg_prefix="lean-c-intelmic/"
+	"lean-c-intelmicemul-host")
+	    cfg_prefix="lean-c-intelmicemul/"
 	    ;;
 	*)
 	    cfg_prefix="$cfg"
@@ -159,12 +159,12 @@ apply_cfg ()
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
 	CFLAGS_FOR_TARGET="-g3 -O0 -dH"
-    elif [ "$cfg" = "lean-c-intelmic-accel" ]; then
+    elif [ "$cfg" = "lean-c-intelmicemul-accel" ]; then
 	build="${build}/accel"
 	install="${install}/accel"
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c --build=x86_64-intelmicemul-linux-gnu --host=x86_64-intelmicemul-linux-gnu --target=x86_64-intelmicemul-linux-gnu --enable-as-accelerator-for=x86_64-pc-linux-gnu" 
 	ALL_CFLAGS="-g3 -O0 -dH"
-    elif [ "$cfg" = "lean-c-intelmic-host" ]; then
+    elif [ "$cfg" = "lean-c-intelmicemul-host" ]; then
 	build="${build}/host"
 	install="${install}/host"
 	configureflags="--disable-bootstrap --build=x86_64-pc-linux-gnu --host=x86_64-pc-linux-gnu --target=x86_64-pc-linux-gnu --enable-checking=yes,rtl --enable-languages=c --enable-offload-targets=x86_64-intelmicemul-linux-gnu=${install}/accel"
