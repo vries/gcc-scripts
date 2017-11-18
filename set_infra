@@ -14,7 +14,7 @@ fi
 export LD_LIBRARY_PATH="${i}/lib${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}"
 
 # add scripts to paths
-export PATH="$PATH:/data/vries/gcc_versions/script"
+export PATH="$PATH:/home/vries/gcc_versions/script"
 
 # add multi-arch dir in case crt*.o is missing, as fallback
 case $(uname -p) in
