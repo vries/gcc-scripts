@@ -129,6 +129,23 @@ apply_cfg ()
 	target="x86_64-apple-darwin10"
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=ada"
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "nvptx" ]; then
+	target="nvptx-none"
+	binutils="/home/vries/nvptx/tools/install/nvptx-none/bin"
+	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
+	configureflags+=" --with-build-time-tools=$binutils"
+        configureflags+=" --disable-libgomp"
+        configureflags+=" --disable-sjlj-exceptions"
+	configureflags+=" --enable-newlib-io-long-long"
+	configureflags+=" --with-as=${binutils}/as --with-ld=${binutils}/ld"
+
+	configureflags+=" --with-sysroot=/nvptx-none"
+
+	configureflags+=" --with-build-sysroot=/home/vries/nvptx/sysroot"
+	mkdir -p /home/vries/nvptx/sysroot/usr
+	mkdir -p /home/vries/nvptx/sysroot/usr/include
+
+ 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "hppa64" ]; then
 	target="hppa64-hp-hpux11.11"
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c"
