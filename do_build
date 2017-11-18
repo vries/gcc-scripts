@@ -172,6 +172,9 @@ apply_cfg ()
     elif [ "$cfg" = "lean-c" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "lean-objc" ]; then
+	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=objc" #--disable-libcilkrts
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "lean-c-O0" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
