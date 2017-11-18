@@ -286,7 +286,7 @@ apply_cfg ()
     elif [ "$cfg" = "spu" ]; then
 	target="spu-elf"
 	fakebin=true
-	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-tls --disable-threads"
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-tls --disable-threads --disable-libssp"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "ia64" ]; then
 	target="ia64-linux-gnu"
