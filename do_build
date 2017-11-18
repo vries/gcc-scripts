@@ -366,6 +366,9 @@ apply_cfg ()
 	# https://dev.openwrt.org/ticket/13039
 	makeflags="$makeflags MAKEINFO=missing"
 	makeflags="$makeflags POD2MAN=/bin/true"
+    else
+	echo "unknown build configuration: $cfg"
+	exit 1
     fi
 
     if [ "$target" != "" ]; then
