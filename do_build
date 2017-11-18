@@ -223,6 +223,25 @@ apply_cfg ()
     elif [ "$cfg" = "i686" ]; then
 	#target=i686-pc-linux-gnu
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c --target=i686-pc-linux-gnu --build=i686-pc-linux-gnu --host=i686-pc-linux-gnu"
+    elif [ "$cfg" = "riscv64" ]; then
+	target=riscv64-unknown-elf
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-libssp"
+	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "phoenix" ]; then
+	target=arm-unknown-phoenix
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-libssp --disable-multilib"
+	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "visium" ]; then
+	target=visium-unknown-elf
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-libssp"
+	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "mcore" ]; then
+	target=mcore-unknown-elf
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c --disable-libssp"
 	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "m68k" ]; then
 	target=m68k-linux-gnu
