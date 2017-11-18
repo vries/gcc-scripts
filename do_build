@@ -284,6 +284,14 @@ apply_cfg ()
 	export PATH="$binutils:$PATH"
 	configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "ppc64" ]; then
+	target="ppc64-linux-gnu"
+	fakebin=true
+	configureflags="--enable-checking=yes,rtl --enable-languages=c,c++ --disable-tls --disable-threads"
+	#binutils="/home/vries/gcc_versions/binutils/${target}-2.24/install/bin"
+	#export PATH="$binutils:$PATH"
+	#configureflags="$configureflags --with-as=${binutils}/${target}-as --with-ld=${binutils}/${target}-ld"
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "s390" ]; then
 	target="s390-linux-gnu"
 	fakebin=false
