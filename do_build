@@ -181,6 +181,9 @@ apply_cfg ()
     elif [ "$cfg" = "lean-c" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
+    elif [ "$cfg" = "lean-hsa" ]; then
+	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=c --disable-libstdc++-v3 --disable-libatomic --disable-libmpx --disable-libquadmath --disable-libssp --enable-offload-targets=hsa" 
+	ALL_CFLAGS="-g3 -O0 -dH"
     elif [ "$cfg" = "lean-objc" ]; then
 	configureflags="--disable-bootstrap --enable-checking=yes,rtl --enable-languages=objc" #--disable-libcilkrts
 	ALL_CFLAGS="-g3 -O0 -dH"
