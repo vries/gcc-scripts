@@ -12,6 +12,7 @@ cloog-0.18.1.tar.gz
 mpfr-2.4.2.tar.bz2
 mpc-0.8.1.tar.gz
 isl-0.15.tar.bz2
+isl-0.12.2.tar.bz2
 "
 
 do_minimal=false
