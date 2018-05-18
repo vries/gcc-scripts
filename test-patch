@@ -196,6 +196,7 @@ build_test ()
 	nobootstrap*)
 	    target=nobootstrap
 	    dir=nobootstrap
+	    opt=
 	    suffix=.nobootstrap
 	    ;;
 	bootstrap*)
@@ -211,7 +212,7 @@ build_test ()
     esac
 
     # do build
-    do_build $d/with $target "$opt"
+    do_build $d/with $target $opt
 
     if echo $id | egrep -q '\-notest$'; then
 	return
@@ -266,7 +267,7 @@ parse_args ()
 		arg="$1"
 		shift
 		case "$arg" in
-		    gcc-4_6-branch|gcc-4_7-branch|gcc-4_8-branch|gcc-4_9-branch)
+		    gcc-4_6-branch|gcc-4_7-branch|gcc-4_8-branch|gcc-4_9-branch|gcc-5-branch|gcc-6-branch)
 			;;
 		    gomp-4_0-branch|master)
 			;;
@@ -503,8 +504,8 @@ main ()
     # cleanup test dir
     d="$buildbase/$localbranch"
     if [ -d $d ]; then
-	mv $d to-be-removed
-	rm -Rf to-be-removed &
+	mv $d $buildbase/to-be-removed
+	rm -Rf $buildbase/to-be-removed &
     fi
 
     # setup test dir

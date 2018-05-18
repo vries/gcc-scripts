@@ -44,37 +44,37 @@ if [ ! -f $p/lib/libgmp.a ]; then
 	| tee ${l}/gmp.log
 fi
 
-if [ ! -f $p/lib/libppl.a ]; then
-    cd ${s} \
-	&& tar xfz ${d}/ppl-0.11.tar.gz \
-	&& ln -s ppl* ppl
-    mkdir ${b}/ppl
-    {
-	cd ${b}/ppl \
-	    && ${s}/ppl/configure --prefix=${p} --with-libgmp-prefix=${p} \
-	    && make ${makeflags} \
-	    && make install \
-	    || exit 1;
-    } 2>&1 \
-	| tee ${l}/ppl.log
-fi
+#if [ ! -f $p/lib/libppl.a ]; then
+#    cd ${s} \
+#	&& tar xfz ${d}/ppl-0.11.tar.gz \
+#	&& ln -s ppl* ppl
+#    mkdir ${b}/ppl
+#    {
+#	cd ${b}/ppl \
+#	    && ${s}/ppl/configure --prefix=${p} --with-libgmp-prefix=${p} \
+#	    && make ${makeflags} \
+#	    && make install \
+#	    || exit 1;
+#    } 2>&1 \
+#	| tee ${l}/ppl.log
+#fi
 
-if [ ! -f $p/lib/libppl_c.a ]; then
-    cd ${s} \
-	&& tar xfz ${d}/cloog-ppl-0.15.10.tar.gz \
-	&& ln -s cloog-ppl* cloog-ppl
-    cd ${s}/cloog-ppl \
-	&& patch -p0 < ${d}/all.diff
-    mkdir ${b}/cloog-ppl
-    { 
-	cd ${b}/cloog-ppl \
-	    && ${s}/cloog-ppl/configure --prefix=${p} --with-ppl=${p} --with-gmp=${p} \
-	    && make ${makeflags} \
-	    && make install \
-	    || exit 1;
-    } 2>&1 \
-	| tee ${l}/cloog.log
-fi
+#if [ ! -f $p/lib/libppl_c.a ]; then
+#    cd ${s} \
+#	&& tar xfz ${d}/cloog-ppl-0.15.10.tar.gz \
+#	&& ln -s cloog-ppl* cloog-ppl
+#    cd ${s}/cloog-ppl \
+#	&& patch -p0 < ${d}/all.diff
+#    mkdir ${b}/cloog-ppl
+#    { 
+#	cd ${b}/cloog-ppl \
+#	    && ${s}/cloog-ppl/configure --prefix=${p} --with-ppl=${p} --with-gmp=${p} \
+#	    && make ${makeflags} \
+#	    && make install \
+#	    || exit 1;
+#    } 2>&1 \
+#	| tee ${l}/cloog.log
+#fi
 
 if [ ! -f $p/lib/libmpfr.a ]; then
     cd ${s} \
@@ -108,7 +108,7 @@ fi
 
 if [ ! -f $p/lib/libisl.a ]; then
     cd ${s} \
-	&& tar xfj ${d}/isl-0.14.tar.bz2 \
+	&& tar xfj ${d}/isl-0.15.tar.bz2 \
 	&& ln -s isl* isl
     mkdir ${b}/isl
     {

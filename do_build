@@ -29,6 +29,11 @@ parse_args ()
 detect_ada_support ()
 {
     ada_supported=false
+
+    # Disable ada due to PR80590 - "[ada] non-bootstrap build failure in ada --
+    #   Error reporting routines re-entered"
+    return
+
     if gnat > /dev/null; then
 	# To get gnat support
 	local v
@@ -305,15 +310,14 @@ configure_make_install ()
     fi
 
     cd ${build}
-
     ${p}/src/configure \
 	--prefix=${install} \
-	--with-cloog=${i} \
-	--with-ppl=${i} \
 	--with-gmp=${i} \
 	--with-mpfr=${i} \
 	--with-mpc=${i} \
 	--with-isl=${i} \
+	--with-cloog=${i} \
+	--with-ppl=${i} \
 	${configureflags} \
 	> CONFIGURELOG 2>&1
 
@@ -391,7 +395,7 @@ main ()
     fakebin=false
 
     detect_ada_support
-    all_supported_languages="c,c++,fortran,go,java,objc,obj-c++"
+    all_supported_languages="c,c++,fortran,go,lto,objc,obj-c++"
     if $ada_supported; then
 	all_supported_languages="$all_supported_languages,ada"
     fi
